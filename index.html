@@ -3,79 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <title>KeNHA LMS - Register/Login</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: url('road_bg.png') no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+ <style>
+  * {
+    box-sizing: border-box;
+  }
 
-    .container {
-      background: rgba(255, 255, 255, 0.95);
-      width: 400px;
-      border-radius: 10px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-    }
+  body {
+    font-family: Arial, sans-serif;
+    background: url('road_bg.png') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
 
-    .logo {
-      text-align: center;
-      padding: 15px;
-    }
+  .container {
+    background: rgba(255, 255, 255, 0.95);
+    width: 100%;
+    max-width: 420px;
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    padding-bottom: 20px;
+  }
 
-    .logo img {
-      max-width: 200px;
-    }
+  .logo {
+    text-align: center;
+    padding: 15px;
+  }
 
-    form {
-      padding: 20px;
-      display: none;
-    }
+  .logo img {
+    max-width: 200px;
+  }
 
-    form.active {
-      display: block;
-    }
+  form {
+    padding: 20px;
+    display: none;
+  }
 
-    form h2 {
-      text-align: center;
-      margin-top: 10px;
-    }
+  form.active {
+    display: block;
+  }
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
+  form h2 {
+    text-align: center;
+    margin-top: 10px;
+  }
 
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      margin-top: 10px;
-    }
+  input,
+  select {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+    font-size: 14px;
+  }
 
-    .toggle-link {
-      text-align: center;
-      margin-top: 10px;
-    }
+  button {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
 
-    .toggle-link a {
-      color: #007bff;
-      text-decoration: none;
-      cursor: pointer;
-    }
-  </style>
+  .toggle-link {
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .toggle-link a {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
 <div class="container">
