@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KeNHA LMS - Register/Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: url('road_bg.png') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      width: 400px;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .logo {
+      text-align: center;
+      padding: 15px;
+    }
+
+    .logo img {
+      max-width: 200px;
+    }
+
+    form {
+      padding: 20px;
+      display: none;
+    }
+
+    form.active {
+      display: block;
+    }
+
+    form h2 {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .toggle-link {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .toggle-link a {
+      color: #007bff;
+      text-decoration: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <img src="kenha_logo.png" alt="KeNHA Logo">
+  </div>
+
+  <!-- Register Form -->
+<form action="register.php" method="POST" id="register-form">
+  <h2>Register</h2>
+  <label for="fullname">Full Name</label>
+  <input type="text" name="fullname" placeholder="Full Name" required />
+
+  <label for="email">Email</label>
+  <input type="email" name="email" placeholder="name@kenha.co.ke" required />
+
+  <label for="dob">Date of Birth</label>
+  <input type="date" name="dob" id="dob" required />
+
+  <label for="department">Department</label>
+  <select name="department" required>
+    <option value="">Select Department</option>
+    <option value="ict">ICT</option>
+    <option value="finance">Finance</option>
+    <option value="hr">HR</option>
+    <option value="planning">Planning</option>
+    <option value="maintenance">Maintenance</option>
+  </select>
+
+  <label for="region">Region</label>
+  <select name="region" required>
+    <option value="">Select Region</option>
+    <option value="nairobi">Nairobi</option>
+    <option value="central">Central</option>
+    <option value="coast">Coast</option>
+    <option value="western">Western</option>
+    <option value="rift-valley">Rift Valley</option>
+    <option value="northeastern">North Eastern</option>
+  </select>
+
+  <input type="password" name="password" placeholder="Password" required />
+  <input type="password" name="confirm_password" placeholder="Confirm Password" required />
+
+  <button type="submit">Register</button>
+
+  <div class="toggle-link">
+    Already registered? <a onclick="toggleForm()">Login</a>
+  </div>
+</form>
+
+  <!-- Login Form -->
+  <form action="login.php" method="POST" id="login-form" class="active">
+    <h2>Login</h2>
+    <input type="email" name="email" placeholder="Email" required />
+    <input type="password" name="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+
+    <div class="toggle-link">
+      New user? <a onclick="toggleForm()">Register</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function toggleForm() {
+    document.getElementById("register-form").classList.toggle("active");
+    document.getElementById("login-form").classList.toggle("active");
+  }
+   window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('registered') === 'success') {
+      alert("Registration successful! Please log in.");
+    }
+  });
+
+  function toggleForm() {
+    document.getElementById("register-form").classList.toggle("active");
+    document.getElementById("login-form").classList.toggle("active");
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('registered') === 'success') {
+      alert("Registration successful! Please log in.");
+    }
+
+    if (params.get('error') === 'dept-head-exists') {
+      alert("Error: A Department Head already exists. Only one is allowed.");
+      toggleForm(); // ensure the registration form is shown
+    }
+  });
+  window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get('registered') === 'success') {
+    alert("✅ Registration successful! Please log in.");
+  }
+
+  if (params.get('error') === 'email-exists') {
+    alert("⚠️ This email is already registered.");
+  } else if (params.get('error') === 'password-mismatch') {
+    alert("⚠️ Passwords do not match.");
+  } else if (params.get('error') === 'dept-head-exists') {
+    alert("⚠️ A Department Head already exists. Only one is allowed.");
+    toggleForm(); // Ensure registration form is visible
+  } else if (params.get('error') === 'hr-exists') {
+    alert("⚠️ An HR (General) already exists. Only one is allowed.");
+    toggleForm();
+  } else if (params.get('error') === 'hr-dept-exists') {
+    alert("⚠️ An HR already exists for this department.");
+    toggleForm();
+  } else if (params.get('error') === 'insert-failed') {
+    alert("❌ Error saving your details. Please try again later.");
+  }
+});
+if (params.get('error') === 'invalid-domain') {
+  alert("⚠️ Only @kenha.co.ke emails are allowed.");
+}
+
+</script>
+</body>
+</html>
