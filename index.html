@@ -214,10 +214,13 @@
     toggleForm();
   } else if (params.get('error') === 'insert-failed') {
     alert("❌ Error saving your details. Please try again later.");
-  }
+  }if (params.get('error') === 'weak-password') {
+  alert("⚠️ Password must be at least 8 characters long, contain uppercase and lowercase letters, a number, and a special character.");
+}
 });
 if (params.get('error') === 'invalid-domain') {
   alert("⚠️ Only @kenha.co.ke emails are allowed.");
+
 }
 
 </script>

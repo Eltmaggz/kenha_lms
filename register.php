@@ -16,8 +16,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
+    // Enforce password policy
+    if (
+        strlen($password) < 8 ||
+        !preg_match('/[A-Z]/', $password) ||         // at least one uppercase
+        !preg_match('/[a-z]/', $password) ||         // at least one lowercase
+        !preg_match('/[0-9]/', $password) ||         // at least one number
+        !preg_match('/[\W_]/', $password)            // at least one special character
+    ) {
+        header("Location: index.html?error=weak-password");
+        exit();
+    }
+
     // Validate email domain
-    if (!preg_match("/@kenha\.co\.ke$/", $email)) {
+    if (!preg_match("/@kenha\\.co\\.ke$/", $email)) {
         header("Location: index.html?error=invalid-domain");
         exit();
     }
@@ -51,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-$stmt->close();
-$conn->close();
+    $stmt->close();
+    $conn->close();
 }
 ?>
