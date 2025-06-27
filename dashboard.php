@@ -1,141 +1,152 @@
 <?php
 session_start();
 if (!isset($_SESSION['email'])) {
-    header("Location: index.html");
-    exit();
+  header("Location: index.html");
+  exit();
 }
 
 $fullname = $_SESSION['fullname'] ?? 'User';
 $role = $_SESSION['role'] ?? 'employee';
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KeNHA LMS Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeNHA LMS - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      height: 100vh;
+      background: linear-gradient(135deg, #e6f0ff, #f2f9ff);
+      padding: 40px;
     }
-    .sidebar {
-      width: 250px;
-      background-color: #002147;
-      color: white;
-      padding: 20px;
+
+    .dashboard {
+      max-width: 1200px;
+      margin: auto;
     }
-    .sidebar h2 {
-      font-size: 22px;
+
+    .header {
+      text-align: center;
       margin-bottom: 30px;
     }
-    .sidebar a {
-      display: block;
-      color: white;
-      text-decoration: none;
-      padding: 10px 0;
-      font-size: 16px;
+
+    .header h1 {
+      font-size: 32px;
+      color: #003366;
     }
-    .sidebar a:hover {
-      background-color: #004080;
-      padding-left: 10px;
-    }
-    .main-content {
-      flex: 1;
-      background-color: #f4f4f4;
-      padding: 30px;
-      overflow-y: auto;
-    }
-    .main-content h1 {
-      font-size: 26px;
+
+    .user-info {
+      text-align: right;
+      font-size: 14px;
       color: #333;
+      margin-bottom: 20px;
     }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
     .card {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      margin-top: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      padding: 25px;
+      transition: transform 0.3s;
     }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
     .card h3 {
+      color: #0055aa;
       margin-bottom: 10px;
+      font-size: 20px;
     }
+
     .card p {
-      color: #666;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .logout {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 10px 20px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-
-<div class="sidebar">
-  <h2>KeNHA LMS</h2>
-  <p><strong><?php echo htmlspecialchars($fullname); ?></strong></p>
-  <p>(<?php echo htmlspecialchars(ucfirst($role)); ?>)</p>
-  <hr style="margin: 15px 0;">
-  <a href="#">Dashboard</a>
-  <a href="#">Profile</a>
-
-  <?php if ($role === 'employee'): ?>
-    <a href="#">My Trainings</a>
-    <a href="#">Certificates</a>
-
-  <?php elseif ($role === 'hr'): ?>
-    <a href="#">All Employees</a>
-    <a href="#">Training Reports</a>
-    <a href="#">Schedule Training</a>
-
-  <?php elseif ($role === 'hr-department'): ?>
-    <a href="#">Department Training Reports</a>
-    <a href="#">Employees in My Department</a>
-
-  <?php elseif ($role === 'dept-head'): ?>
-    <a href="#">Approve Requests</a>
-    <a href="#">Team Progress</a>
-
-  <?php elseif ($role === 'trainer'): ?>
-    <a href="#">My Sessions</a>
-    <a href="#">Submit Feedback</a>
-  <?php endif; ?>
-
-  <a href="logout.php">Logout</a>
-</div>
-
-<div class="main-content">
-  <h1>Welcome, <?php echo htmlspecialchars($fullname); ?>!</h1>
-
-  <?php if ($role === 'employee'): ?>
-    <div class="card">
-      <h3>Your Training Progress</h3>
-      <p>You are enrolled in 3 courses. Next training: ERP Refresher - July 20.</p>
+  <div class="dashboard">
+    <div class="header">
+      <h1>Welcome to KeNHA LMS</h1>
     </div>
 
-  <?php elseif ($role === 'hr'): ?>
-    <div class="card">
-      <h3>Company-Wide Overview</h3>
-      <p>Track, manage, and schedule training across departments.</p>
+    <div class="user-info">
+      Logged in as: <strong><?php echo $_SESSION['email']; ?></strong><br>
+      Role: <strong><?php echo $_SESSION['role']; ?></strong>
     </div>
 
-  <?php elseif ($role === 'hr-department'): ?>
-    <div class="card">
-      <h3>Department Reports</h3>
-      <p>View training stats for your department only.</p>
+    <div class="cards">
+      <!-- Common Features -->
+      <div class="card">
+        <h3>View Trainings</h3>
+        <p>Explore available trainings for your department and region.</p>
+      </div>
+
+      <div class="card">
+        <h3>My Progress</h3>
+        <p>Track your completed, ongoing, and upcoming training sessions.</p>
+      </div>
+
+      <!-- HR Features -->
+      <?php if ($_SESSION['role'] === 'hr') { ?>
+      <div class="card">
+        <h3>Add Training</h3>
+        <p>Create new training programs for different departments and categories.</p>
+      </div>
+
+      <div class="card">
+        <h3>Approve Requests</h3>
+        <p>Review and respond to special or external training requests.</p>
+      </div>
+
+      <div class="card">
+        <h3>Reports</h3>
+        <p>Generate training and enrollment reports across the organization.</p>
+      </div>
+      <?php } ?>
+
+      <!-- HOD Features -->
+      <?php if ($_SESSION['role'] === 'dept-head') { ?>
+      <div class="card">
+        <h3>Schedule Training</h3>
+        <p>Manage quarterly training sessions for your department.</p>
+      </div>
+
+      <div class="card">
+        <h3>Department Requests</h3>
+        <p>View training needs raised by team members and manage approvals.</p>
+      </div>
+      <?php } ?>
     </div>
 
-  <?php elseif ($role === 'dept-head'): ?>
-    <div class="card">
-      <h3>Team Monitoring</h3>
-      <p>Approve training requests and monitor staff progress in your department.</p>
-    </div>
-
-  <?php elseif ($role === 'trainer'): ?>
-    <div class="card">
-      <h3>Training Sessions</h3>
-      <p>You have 2 upcoming sessions. Upload training material and record attendance.</p>
-    </div>
-  <?php endif; ?>
-</div>
-
+    <a class="logout" href="logout.php">Logout</a>
+  </div>
 </body>
 </html>
