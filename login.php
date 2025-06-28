@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'config.php';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
@@ -15,16 +16,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $user = $result->fetch_assoc();
 
         if (password_verify($password, $user['password'])) {
+            // ✅ Set session variables
             $_SESSION['email'] = $user['email'];
             $_SESSION['fullname'] = $user['fullname'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['department'] = $user['department'];
+            $_SESSION['region'] = $user['region'];
+            $_SESSION['profile_photo'] = $user['profile_photo'] ?? 'default-avatar.png'; // Added line
+
+            // Redirect to dashboard
             header("Location: dashboard.php");
             exit();
         } else {
-            echo "Invalid password.";
+            // Wrong password
+            header("Location: index.html?error=invalid-password");
+            exit();
         }
     } else {
-        echo "No account found with that email.";
+        // Email not found
+        header("Location: index.html?error=user-not-found");
+        exit();
     }
 
     $stmt->close();
