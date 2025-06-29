@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KeNHA LMS - Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: url('assets/landing_bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 1;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .logo img {
+      max-width: 220px;
+      margin-bottom: 25px;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin-bottom: 10px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 12px 28px;
+      background-color: white;
+      color: #003366;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #f2f2f2;
+    }
+
+    .ticker {
+      background: rgba(255,255,255,0.15);
+      width: 100%;
+      padding: 10px;
+      text-align: center;
+      color: #fff;
+      font-size: 14px;
+      position: absolute;
+      bottom: 0;
+      z-index: 3;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .ticker span {
+      display: inline-block;
+      animation: scrollText 15s linear infinite;
+    }
+
+    .testimonials {
+      position: absolute;
+      bottom: 60px;
+      text-align: center;
+      color: #eee;
+      font-size: 14px;
+      width: 100%;
+    }
+
+    .video-preview {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      max-width: 320px;
+      z-index: 3;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    @keyframes scrollText {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 28px; }
+      .btn { padding: 10px 20px; font-size: 14px; }
+      .video-preview { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <div class="content">
+    <div class="logo">
+      <img src="assets/kenha_logo.png" alt="KeNHA Logo">
+    </div>
+    <h1>Welcome to KeNHA LMS</h1>
+    <p>Empowering Workforce through Modern Learning</p>
+
+    <div class="buttons">
+      <a href="index.html" class="btn">Login</a>
+      <a href="register.html" class="btn">Register</a>
+    </div>
+  </div>
+
+  <div class="testimonials">
+    <p>"Very helpful and interactive platform." – ICT Dept</p>
+    <p>"We've transformed how we train staff across all regions." – HR Director</p>
+  </div>
+
+  <div class="ticker"><span>📢 Upcoming Maintenance on Saturday | 🚀 New modules launching next week | 🏆 Top performers to be announced soon!</span></div>
+
+  <div class="video-preview">
+    <iframe width="100%" height="200" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Intro Video" frameborder="0" allowfullscreen></iframe>
+  </div>
+
+  <script>
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 10000); // auto-redirect after 10 seconds
+  </script>
+</body>
+</html>
