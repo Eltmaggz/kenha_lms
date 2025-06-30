@@ -99,6 +99,62 @@ if ($role === 'hr') {
       color: #444;
     }
 
+    .upload-controls {
+      margin-top: 10px;
+    }
+
+    .file-upload {
+      display: inline-block;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      color: #003366;
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+      transition: background 0.3s ease;
+    }
+
+    .file-upload:hover {
+      background-color: #f0f0f0;
+    }
+
+    .file-upload input[type="file"] {
+      display: none;
+    }
+
+    .action-btn {
+      padding: 10px 15px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s ease;
+      margin-right: 10px;
+    }
+
+    .upload-btn {
+      background: #00793a;
+      color: white;
+    }
+
+    .upload-btn:hover {
+      background: #00662f;
+    }
+
+    .remove-btn {
+      background: #bb0000;
+      color: white;
+    }
+
+    .remove-btn:hover {
+      background: #990000;
+    }
+
     .cards {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -131,10 +187,6 @@ if ($role === 'hr') {
       border-radius: 6px;
       text-decoration: none;
     }
-
-    .upload-controls {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
@@ -162,12 +214,15 @@ if ($role === 'hr') {
         <p><strong>Role:</strong> <?php echo htmlspecialchars($role); ?></p>
 
         <form class="upload-controls" action="upload_photo.php" method="POST" enctype="multipart/form-data">
-          <input type="file" name="profile_photo" accept="image/*" required>
-          <button type="submit">Upload</button>
+          <label class="file-upload">
+            <input type="file" name="profile_photo" accept="image/*" required>
+            Choose File
+          </label>
+          <button type="submit" class="action-btn upload-btn">Upload</button>
         </form>
 
         <form class="upload-controls" action="remove_photo.php" method="POST">
-          <button type="submit">Remove Photo</button>
+          <button type="submit" class="action-btn remove-btn">Remove Photo</button>
         </form>
       </div>
 
