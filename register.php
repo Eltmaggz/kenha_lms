@@ -56,14 +56,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssssss", $fullname, $email, $hashed_password, $dob, $department, $region);
 
     if ($stmt->execute()) {
+        $stmt->close();
+        $conn->close();
         header("Location: index.html?registered=success");
         exit();
     } else {
+        $stmt->close();
+        $conn->close();
         header("Location: index.html?error=insert-failed");
         exit();
     }
-
-    $stmt->close();
-    $conn->close();
 }
 ?>
