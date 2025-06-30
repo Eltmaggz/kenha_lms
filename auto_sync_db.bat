@@ -1,15 +1,13 @@
 @echo off
-set DB_NAME=kenha_lms
-set DB_USER=root
-set FILE_NAME=kenha_lms.db
+echo Exporting MySQL database to kenha_lms.sql...
 
-echo Exporting MySQL database to %FILE_NAME%...
-mysqldump -u %DB_USER% %DB_NAME% > %FILE_NAME%
+REM Export DB to .sql file
+mysqldump -u root kenha_lms > kenha_lms.sql
 
 echo Committing database dump to Git...
-git add %FILE_NAME%
-git commit -m "🔄 Auto-sync kenha_lms.db"
-git push
+git add kenha_lms.sql
+git commit -m "🔄 Auto-sync kenha_lms.sql"
+git push origin PROMAIN
 
 echo ✅ Exported and pushed successfully.
 pause
