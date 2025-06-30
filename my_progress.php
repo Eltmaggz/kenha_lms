@@ -8,9 +8,30 @@ include 'config.php';
 
 $email = $_SESSION['email'];
 
-// Get user progress from the enrollments table (dummy fallback)
-$stmt = $conn->prepare("SELECT t.title, t.training_date, e.status FROM trainings t JOIN enrollments e ON t.id = e.training_id WHERE e.user_email = ? ORDER BY t.training_date DESC");
+// Get user_id based on email
+$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
+$stmt->execute();
+$userResult = $stmt->get_result();
+$user = $userResult->fetch_assoc();
+$userId = $user['id'] ?? 0;
+$stmt->close();
+
+// Now fetch progress using user_id
+$query = "
+SELECT t.title, t.training_date, 
+       CASE 
+         WHEN e.completed = 1 THEN 'Completed'
+         WHEN e.progress > 0 THEN 'Ongoing'
+         ELSE 'Pending'
+       END AS status
+FROM trainings t
+JOIN enrollments e ON t.id = e.training_id
+WHERE e.user_id = ?
+ORDER BY t.training_date DESC
+";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -30,23 +51,31 @@ $result = $stmt->get_result();
     .status-completed { color: green; font-weight: bold; }
     .status-ongoing { color: #ff9800; font-weight: bold; }
     .status-pending { color: #bb0000; font-weight: bold; }
+    .empty { margin-top: 20px; font-style: italic; color: #888; }
   </style>
 </head>
 <body>
-  <h2>My Training Progress</h2>
-  <table>
-    <tr>
-      <th>Title</th>
-      <th>Date</th>
-      <th>Status</th>
-    </tr>
-    <?php while ($row = $result->fetch_assoc()) { ?>
+  <h2>📈 My Training Progress</h2>
+
+  <?php if ($result->num_rows > 0) { ?>
+    <table>
       <tr>
-        <td><?php echo htmlspecialchars($row['title']); ?></td>
-        <td><?php echo htmlspecialchars($row['training_date']); ?></td>
-        <td class="status-<?php echo strtolower($row['status']); ?>"><?php echo htmlspecialchars($row['status']); ?></td>
+        <th>Title</th>
+        <th>Date</th>
+        <th>Status</th>
       </tr>
-    <?php } ?>
-  </table>
+      <?php while ($row = $result->fetch_assoc()) { ?>
+        <tr>
+          <td><?php echo htmlspecialchars($row['title']); ?></td>
+          <td><?php echo htmlspecialchars($row['training_date']); ?></td>
+          <td class="status-<?php echo strtolower($row['status']); ?>">
+            <?php echo htmlspecialchars($row['status']); ?>
+          </td>
+        </tr>
+      <?php } ?>
+    </table>
+  <?php } else { ?>
+    <p class="empty">You haven't enrolled in any training sessions yet.</p>
+  <?php } ?>
 </body>
 </html>
