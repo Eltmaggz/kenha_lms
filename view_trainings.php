@@ -8,9 +8,17 @@ include 'config.php';
 
 $department = $_SESSION['department'];
 $region = $_SESSION['region'];
+$search = $_GET['search'] ?? '';
+$searchParam = '%' . $search . '%';
 
-$stmt = $conn->prepare("SELECT * FROM trainings WHERE department = ? OR region = ?");
-$stmt->bind_param("ss", $department, $region);
+// Filter trainings by title or date
+$stmt = $conn->prepare("
+  SELECT * FROM trainings 
+  WHERE (department = ? OR region = ?) 
+  AND (title LIKE ? OR training_date LIKE ?)
+  ORDER BY training_date DESC
+");
+$stmt->bind_param("ssss", $department, $region, $searchParam, $searchParam);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -33,6 +41,17 @@ $result = $stmt->get_result();
       margin-bottom: 20px;
     }
 
+    .search-form {
+      margin-bottom: 20px;
+    }
+
+    .search-form input[type="text"] {
+      padding: 10px;
+      width: 300px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
     .card {
       background: white;
       padding: 20px;
@@ -52,10 +71,29 @@ $result = $stmt->get_result();
       color: #333;
     }
 
-    .card a {
-      color: #00793a;
-      font-weight: 600;
+    .badge {
+      background: #003366;
+      color: white;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      display: inline-block;
+      margin-top: 5px;
+    }
+
+    .enroll-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #00793a;
+      color: white;
       text-decoration: none;
+      border-radius: 5px;
+      font-weight: 600;
+    }
+
+    .enroll-btn:hover {
+      background: #00662f;
     }
 
     .no-data {
@@ -70,7 +108,11 @@ $result = $stmt->get_result();
 </head>
 <body>
 
-  <h2>Available Trainings for <?= htmlspecialchars($department) ?> / <?= htmlspecialchars($region) ?></h2>
+  <h2>📚 Available Trainings for <?= htmlspecialchars($department) ?> / <?= htmlspecialchars($region) ?></h2>
+
+  <form method="get" class="search-form">
+    <input type="text" name="search" placeholder="Search by title or date..." value="<?= htmlspecialchars($search) ?>">
+  </form>
 
   <?php if ($result->num_rows > 0): ?>
     <?php while ($row = $result->fetch_assoc()) { ?>
@@ -78,9 +120,9 @@ $result = $stmt->get_result();
         <h3><?= htmlspecialchars($row['title']) ?></h3>
         <p><strong>Description:</strong> <?= htmlspecialchars($row['description']) ?></p>
         <p><strong>Date:</strong> <?= htmlspecialchars($row['training_date']) ?></p>
-        <p><strong>Material:</strong>
-          <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a>
-        </p>
+        <p><strong>Material:</strong> <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a></p>
+        <span class="badge"><?= htmlspecialchars($row['department']) ?> Department</span><br>
+        <a class="enroll-btn" href="enroll.php?training_id=<?= $row['id'] ?>">Enroll</a>
       </div>
     <?php } ?>
   <?php else: ?>

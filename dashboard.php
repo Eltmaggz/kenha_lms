@@ -7,18 +7,22 @@ if (!isset($_SESSION['email'])) {
     exit();
 }
 
-// Variables from session
+// Session variables
 $fullname = $_SESSION['fullname'] ?? 'User';
 $role = $_SESSION['role'] ?? 'employee';
 $email = $_SESSION['email'] ?? '';
 $department = $_SESSION['department'] ?? 'N/A';
 $region = $_SESSION['region'] ?? 'N/A';
-$profilePhoto = $_SESSION['profile_photo'] ?? 'default-avatar.png';
 
-// Get stats for HR
+// Default profile photo (web image)
+$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
+    $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
+}
+
+// Dashboard stats for all roles
 $pending = $scheduled = $reports = 0;
-
-if ($role === 'hr') {
+if ($role === 'hr' || $role === 'dept-head' || $role === 'employee') {
     $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
     $scheduled = $conn->query("SELECT COUNT(*) FROM trainings WHERE WEEK(training_date) = WEEK(CURDATE())")->fetch_row()[0] ?? 0;
     $reports = $conn->query("SELECT COUNT(*) FROM reports")->fetch_row()[0] ?? 0;
@@ -41,8 +45,7 @@ if ($role === 'hr') {
 
     body {
       background: linear-gradient(135deg, #e6f0ff, #f2f9ff);
-      margin: 0;
-      padding: 40px;
+      padding: 20px;
     }
 
     .dashboard {
@@ -53,36 +56,38 @@ if ($role === 'hr') {
     .top-bar {
       background: #003366;
       color: white;
-      padding: 15px 30px;
+      padding: 15px 25px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 30px;
       border-radius: 10px;
+      flex-wrap: wrap;
     }
 
     .badge {
       background: #00793a;
-      padding: 8px 15px;
+      padding: 6px 14px;
       border-radius: 20px;
       font-size: 13px;
       margin-left: 10px;
+      margin-top: 5px;
     }
 
     .content-area {
       display: flex;
+      flex-wrap: wrap;
       gap: 30px;
-      align-items: stretch;
     }
 
     .sidebar-profile {
-      width: 270px;
+      width: 100%;
+      max-width: 270px;
       background: #ffffff;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
       padding: 20px;
       flex-shrink: 0;
-      min-height: 400px;
     }
 
     .sidebar-profile img {
@@ -95,8 +100,8 @@ if ($role === 'hr') {
 
     .sidebar-profile p {
       font-size: 14px;
-      margin: 5px 0;
-      color: #444;
+      margin: 6px 0;
+      color: #333;
     }
 
     .upload-controls {
@@ -113,7 +118,6 @@ if ($role === 'hr') {
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      margin-right: 10px;
       margin-bottom: 10px;
       transition: background 0.3s ease;
     }
@@ -134,12 +138,12 @@ if ($role === 'hr') {
       cursor: pointer;
       font-weight: 600;
       transition: background 0.3s ease;
-      margin-right: 10px;
     }
 
     .upload-btn {
       background: #00793a;
       color: white;
+      margin-right: 10px;
     }
 
     .upload-btn:hover {
@@ -156,21 +160,20 @@ if ($role === 'hr') {
     }
 
     .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
       flex: 1;
-      min-height: 400px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
     }
 
     .card {
       background: #ffffff;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       padding: 25px;
-      transition: transform 0.3s;
       text-decoration: none;
       color: inherit;
+      transition: transform 0.3s;
     }
 
     .card:hover {
@@ -187,14 +190,25 @@ if ($role === 'hr') {
       border-radius: 6px;
       text-decoration: none;
     }
+
+    @media (max-width: 768px) {
+      .content-area {
+        flex-direction: column;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="dashboard">
-
-    <?php if ($role === 'hr') { ?>
+    <?php if (in_array($role, ['hr', 'dept-head', 'employee'])) { ?>
       <div class="top-bar">
-        <h2>HR Dashboard</h2>
+        <h2>
+          <?php
+            if ($role === 'hr') echo 'HR Dashboard';
+            elseif ($role === 'dept-head') echo 'Department Head Dashboard';
+            else echo 'Staff Dashboard';
+          ?>
+        </h2>
         <div>
           <span class="badge"><?php echo $pending; ?> Pending Requests</span>
           <span class="badge"><?php echo $scheduled; ?> Trainings This Week</span>
@@ -206,7 +220,7 @@ if ($role === 'hr') {
     <div class="content-area">
       <div class="sidebar-profile">
         <h3>👤 Profile</h3>
-        <img src="uploads/<?php echo $profilePhoto; ?>" alt="Profile Photo" onerror="this.src='default-avatar.png'">
+        <img src="<?php echo $profilePhoto; ?>" alt="Profile Photo">
         <p><strong>Name:</strong> <?php echo htmlspecialchars($fullname); ?></p>
         <p><strong>Email:</strong> <?php echo htmlspecialchars($email); ?></p>
         <p><strong>Department:</strong> <?php echo htmlspecialchars($department); ?></p>
@@ -228,41 +242,38 @@ if ($role === 'hr') {
 
       <div class="cards">
         <a href="view_trainings.php" class="card">
-          <h3>View Trainings</h3>
+          <h3>📋 View Trainings</h3>
           <p>Explore available trainings for your department and region.</p>
         </a>
 
         <a href="my_progress.php" class="card">
-          <h3>My Progress</h3>
+          <h3>📈 My Progress</h3>
           <p>Track your completed, ongoing, and upcoming training sessions.</p>
         </a>
 
         <?php if ($role === 'hr') { ?>
           <a href="add_training.php" class="card">
-            <h3>Add Training</h3>
-            <p>Create new training programs for different departments.</p>
+            <h3>➕ Add Training</h3>
+            <p>Create training programs for your team.</p>
           </a>
-
           <a href="approve_requests.php" class="card">
-            <h3>Approve Requests</h3>
-            <p>Handle special or external training approvals.</p>
+            <h3>✅ Approve Requests</h3>
+            <p>Review and approve training suggestions.</p>
           </a>
-
           <a href="reports.php" class="card">
-            <h3>Reports</h3>
-            <p>Generate and view training statistics.</p>
+            <h3>📊 Reports</h3>
+            <p>Monitor statistics and analytics.</p>
           </a>
         <?php } ?>
 
         <?php if ($role === 'dept-head') { ?>
           <a href="schedule_training.php" class="card">
-            <h3>Schedule Training</h3>
-            <p>Manage department training plans.</p>
+            <h3>📅 Schedule Training</h3>
+            <p>Manage departmental sessions.</p>
           </a>
-
           <a href="department_requests.php" class="card">
-            <h3>Department Requests</h3>
-            <p>Approve and track team training needs.</p>
+            <h3>📨 Department Requests</h3>
+            <p>View and approve requests from your team.</p>
           </a>
         <?php } ?>
       </div>
