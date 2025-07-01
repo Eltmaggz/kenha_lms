@@ -11,7 +11,6 @@ $region = $_SESSION['region'];
 $search = $_GET['search'] ?? '';
 $searchParam = '%' . $search . '%';
 
-// Filter trainings by title or date
 $stmt = $conn->prepare("
   SELECT * FROM trainings 
   WHERE (department = ? OR region = ?) 
@@ -120,7 +119,12 @@ $result = $stmt->get_result();
         <h3><?= htmlspecialchars($row['title']) ?></h3>
         <p><strong>Description:</strong> <?= htmlspecialchars($row['description']) ?></p>
         <p><strong>Date:</strong> <?= htmlspecialchars($row['training_date']) ?></p>
-        <p><strong>Material:</strong> <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a></p>
+        <p><strong>Time of Delivery:</strong> <?= htmlspecialchars($row['time_of_delivery']) ?></p>
+        <p><strong>Mode of Delivery:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
+        <p><strong>Assessment Type:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
+        <p><strong>Material:</strong> 
+          <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a>
+        </p>
         <span class="badge"><?= htmlspecialchars($row['department']) ?> Department</span><br>
         <a class="enroll-btn" href="enroll.php?training_id=<?= $row['id'] ?>">Enroll</a>
       </div>
