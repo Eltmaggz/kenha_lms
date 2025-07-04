@@ -89,19 +89,24 @@ $result = $stmt->get_result();
     .card h3 { color: #00793a; margin-top: 0; }
     .badge { background: #003366; color: white; font-size: 13px;
       padding: 4px 10px; border-radius: 5px; display: inline-block; margin-top: 10px; }
-    .view-users {
+    .view-users, .export-btn {
       margin-top: 10px; display: inline-block; text-decoration: none;
-      color: white; background: #00793a; padding: 8px 12px; border-radius: 5px;
+      color: white; padding: 8px 12px; border-radius: 5px;
     }
+    .view-users { background: #00793a; }
+    .export-btn { background: #0055aa; margin-left: 10px; }
+
     .back-btn {
       display: inline-block; margin-bottom: 20px;
       background: #003366; color: white; padding: 10px 20px;
       text-decoration: none; border-radius: 6px; font-weight: bold;
     }
+
     .filter-form {
       background: #fff; padding: 15px; margin-bottom: 30px;
       border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
+
     .filter-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
     .filter-group label { font-size: 14px; }
     .submit-btn {
@@ -160,6 +165,7 @@ $result = $stmt->get_result();
       <p><strong>Regions:</strong> <?= htmlspecialchars($row['regions']) ?></p>
       <p><strong>Enrolled:</strong> <?= $row['enrolled_count'] ?> people</p>
       <a class="view-users" href="view_enrollments.php?training_id=<?= $row['id'] ?>">👥 View Enrolled Users</a>
+      <a href="export_enrollments.php?training_id=<?= $row['id'] ?>" class="export-btn">⬇ Export CSV</a>
     </div>
   <?php } ?>
 <?php else: ?>
