@@ -264,12 +264,12 @@ if ($role === 'hr' || $role === 'dept-head' || $role === 'employee') {
             <h3>📊 Reports</h3>
             <p>Monitor statistics and analytics.</p>
           </a>
-          <a href="view_trainings_set.php" class="card">
-            <h3>📋 View Trainings Set</h3>
-            <p>View trainings that you have set</p>
-          </a>
-        <?php } ?>
+          <a href="view_my_trainings.php" class="card">
+  <h3>📋 View My Trainings</h3>
+  <p>View and manage trainings you have created.</p>
+</a>
 
+        <?php } ?>
         <?php if ($role === 'dept-head') { ?>
           <a href="schedule_training.php" class="card">
             <h3>📅 Schedule Training</h3>
