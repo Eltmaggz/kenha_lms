@@ -8,8 +8,12 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'hr') {
 include 'config.php';
 $message = '';
 
+// Load departments and regions from DB
+$departments = $conn->query("SELECT id, name FROM departments ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+$regions = $conn->query("SELECT id, name FROM regions ORDER BY name")->fetch_all(MYSQLI_ASSOC);
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $created_by = $_SESSION['user_id']; // ✅ use user_id, not email
+    $created_by = $_SESSION['user_id'];
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
     $time = $_POST['time_of_delivery'];
@@ -19,12 +23,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $use_link = isset($_POST['use_link']);
     $material_link = '';
-    $departments = $_POST['departments'] ?? [];
-    $regions = $_POST['regions'] ?? [];
+    $selectedDepts = $_POST['departments'] ?? [];
+    $selectedRegions = $_POST['regions'] ?? [];
 
-    if (empty($departments) || empty($regions)) {
+    if (empty($selectedDepts) || empty($selectedRegions)) {
         $message = "❌ Please select at least one department and one region.";
     } else {
+        // Handle file or link
         if ($use_link) {
             $material_link = trim($_POST['link']);
         } else {
@@ -32,9 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $ext = pathinfo($_FILES['material_file']['name'], PATHINFO_EXTENSION);
                 $filename = uniqid('training_', true) . '.' . $ext;
                 $uploadDir = 'uploads/trainings';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true); // ✅ create folder if not exist
-                }
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
                 $uploadPath = $uploadDir . '/' . $filename;
                 if (move_uploaded_file($_FILES['material_file']['tmp_name'], $uploadPath)) {
                     $material_link = $uploadPath;
@@ -45,28 +48,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         if (empty($message)) {
-            $stmt = $conn->prepare("SELECT id FROM trainings WHERE title = ? AND department = ? AND region = ?");
-            $insert = $conn->prepare("INSERT INTO trainings (title, description, material_link, department, region, time_of_delivery, mode_of_delivery, assessment_type, training_date, created_by)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            // Insert into trainings table
+            $stmt = $conn->prepare("INSERT INTO trainings (title, description, material_link, time_of_delivery, mode_of_delivery, assessment_type, training_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssssssss", $title, $description, $material_link, $time, $mode, $assessment, $date, $created_by);
+            if ($stmt->execute()) {
+                $training_id = $stmt->insert_id;
 
-            $addedCount = 0;
-            foreach ($departments as $dept) {
-                foreach ($regions as $reg) {
-                    $stmt->bind_param("sss", $title, $dept, $reg);
-                    $stmt->execute();
-                    $stmt->store_result();
-                    if ($stmt->num_rows === 0) {
-                        $insert->bind_param("ssssssssss", $title, $description, $material_link, $dept, $reg, $time, $mode, $assessment, $date, $created_by);
-                        $insert->execute();
-                        $addedCount++;
+                // Assign departments and regions
+                $assign = $conn->prepare("INSERT INTO training_assignments (training_id, department_id, region_id) VALUES (?, ?, ?)");
+                $assignments = 0;
+                foreach ($selectedDepts as $dept_id) {
+                    foreach ($selectedRegions as $region_id) {
+                        $assign->bind_param("iii", $training_id, $dept_id, $region_id);
+                        $assign->execute();
+                        $assignments++;
                     }
                 }
+                $assign->close();
+                $message = "✅ Training added and assigned to $assignments department-region combination(s).";
+            } else {
+                $message = "❌ Failed to insert training.";
             }
-            $message = "✅ Training successfully added to $addedCount department-region combination(s)!";
             $stmt->close();
-            $insert->close();
         }
     }
+
     $conn->close();
 }
 ?>
@@ -77,10 +83,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <meta charset="UTF-8">
   <title>Add Training</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f1f4f9; padding: 40px; }
+    body { font-family: Arial, sans-serif; background: #f4f7fc; padding: 40px; }
     .container {
       background: #fff; padding: 30px; border-radius: 10px;
-      max-width: 800px; margin: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+      max-width: 850px; margin: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
     h2 { color: #00793a; margin-bottom: 20px; }
     label { display: block; margin-top: 12px; font-weight: bold; }
@@ -91,31 +97,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     .checkbox-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 6px;
-    }
-    .checkbox-grid label { display: flex; align-items: center; gap: 8px; }
-    button {
-      background: #00793a; color: white; padding: 10px 20px; border: none;
-      margin-top: 20px; border-radius: 6px; cursor: pointer;
+      gap: 8px;
+      margin-top: 10px;
     }
     .message { margin-top: 20px; font-weight: bold; color: green; }
+    button {
+      background: #00793a; color: white; padding: 10px 20px;
+      border: none; border-radius: 6px; margin-top: 20px; cursor: pointer;
+    }
+    .back-btn {
+      background: #003366; color: white; text-decoration: none;
+      padding: 10px 20px; border-radius: 6px; display: inline-block; margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <h2>Add New Training</h2>
-  <a href="dashboard.php" style="
-  display: inline-block;
-  margin: 15px 0;
-  padding: 10px 20px;
-  background: #003366;
-  color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  font-weight: bold;
-">⬅ Back to Dashboard</a>
+  <a href="dashboard.php" class="back-btn">⬅ Back to Dashboard</a>
 
-  <?php if (!empty($message)) echo "<p class='message'>$message</p>"; ?>
+  <?php if (!empty($message)) echo "<div class='message'>$message</div>"; ?>
+
   <form method="POST" enctype="multipart/form-data">
     <label>Title</label>
     <input type="text" name="title" required>
@@ -123,13 +125,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <label>Description</label>
     <textarea name="description" required></textarea>
 
-    <div style="margin-top:12px;">
-      <input type="checkbox" id="use_link" name="use_link" onchange="toggleMaterialInputs()">
-      <label for="use_link">Use Link instead of File</label>
-    </div>
+    <label><input type="checkbox" id="use_link" name="use_link" onchange="toggleMaterial()"> Use Link Instead of File</label>
 
     <div id="fileInput">
-      <label>Upload PDF/Video File</label>
+      <label>Upload PDF/Video</label>
       <input type="file" name="material_file" accept=".pdf,.mp4,.mov,.avi">
     </div>
 
@@ -143,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <label>Mode of Delivery</label>
     <select name="mode_of_delivery" required>
-      <option value="">--Select Mode--</option>
+      <option value="">--Select--</option>
       <option value="In-person">In-person</option>
       <option value="Virtual">Virtual</option>
       <option value="Hybrid">Hybrid</option>
@@ -151,45 +150,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <label>Assessment Type</label>
     <select name="assessment_type" required>
-      <option value="">--Select Assessment--</option>
+      <option value="">--Select--</option>
       <option value="Quiz">Quiz</option>
       <option value="Written Test">Written Test</option>
       <option value="Practical Evaluation">Practical Evaluation</option>
       <option value="None">None</option>
     </select>
 
-    <label>Training Date (optional)</label>
+    <label>Training Date</label>
     <input type="datetime-local" name="training_date">
 
-    <label>Assign to Department(s)</label>
+    <label>Assign to Departments:</label>
     <div class="checkbox-grid">
-      <label><input type="checkbox" onclick="toggleAll(this, 'departments[]')"> <strong>Select All Departments</strong></label>
-      <?php
-      $depts = [
-        "planning and design", "construction and maintenance", "procurement", "finance and accounts",
-        "human resource and administration", "legal services", "corporate communications", "ict",
-        "environment and social safeguards", "internal audit", "quality assurance",
-        "research and development", "road asset management"
-      ];
-      foreach ($depts as $dept) {
-          echo "<label><input type='checkbox' name='departments[]' value='$dept'> " . ucfirst($dept) . "</label>";
-      }
-      ?>
+      <?php foreach ($departments as $d): ?>
+        <label><input type="checkbox" name="departments[]" value="<?= $d['id'] ?>"> <?= ucfirst($d['name']) ?></label>
+      <?php endforeach; ?>
     </div>
 
-    <label>Assign to Region(s)</label>
+    <label>Assign to Regions:</label>
     <div class="checkbox-grid">
-      <label><input type="checkbox" onclick="toggleAll(this, 'regions[]')"> <strong>Select All Regions</strong></label>
-      <?php
-      $regions = [
-        "nairobi (hq)", "upper eastern", "lower eastern", "coast",
-        "south rift", "north rift", "central", "nyanza",
-        "north eastern", "western"
-      ];
-      foreach ($regions as $r) {
-          echo "<label><input type='checkbox' name='regions[]' value='$r'> " . ucfirst($r) . "</label>";
-      }
-      ?>
+      <?php foreach ($regions as $r): ?>
+        <label><input type="checkbox" name="regions[]" value="<?= $r['id'] ?>"> <?= ucfirst($r['name']) ?></label>
+      <?php endforeach; ?>
     </div>
 
     <button type="submit">➕ Add Training</button>
@@ -197,15 +179,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
-function toggleMaterialInputs() {
+function toggleMaterial() {
   const useLink = document.getElementById("use_link").checked;
   document.getElementById("fileInput").style.display = useLink ? "none" : "block";
   document.getElementById("linkInput").style.display = useLink ? "block" : "none";
-}
-
-function toggleAll(master, groupName) {
-  const checkboxes = document.querySelectorAll(`input[name='${groupName}']`);
-  checkboxes.forEach(cb => cb.checked = master.checked);
 }
 </script>
 </body>
