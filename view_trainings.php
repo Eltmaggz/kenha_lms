@@ -4,22 +4,47 @@ if (!isset($_SESSION['email'])) {
   header("Location: index.html");
   exit();
 }
+
 include 'config.php';
 
-$department = $_SESSION['department'];
-$region = $_SESSION['region'];
 $search = $_GET['search'] ?? '';
 $searchParam = '%' . $search . '%';
 
-$stmt = $conn->prepare("
+$selectedDepartments = $_GET['departments'] ?? [];
+$selectedRegions = $_GET['regions'] ?? [];
+
+$departmentFilter = !empty($selectedDepartments) ? $selectedDepartments : [$_SESSION['department']];
+$regionFilter = !empty($selectedRegions) ? $selectedRegions : [$_SESSION['region']];
+
+$inClauseDept = implode(',', array_fill(0, count($departmentFilter), '?'));
+$inClauseRegion = implode(',', array_fill(0, count($regionFilter), '?'));
+
+$params = array_merge($departmentFilter, $regionFilter, [$searchParam, $searchParam]);
+
+$sql = "
   SELECT * FROM trainings 
-  WHERE (department = ? OR region = ?) 
+  WHERE department IN ($inClauseDept)
+  AND region IN ($inClauseRegion)
   AND (title LIKE ? OR training_date LIKE ?)
   ORDER BY training_date DESC
-");
-$stmt->bind_param("ssss", $department, $region, $searchParam, $searchParam);
+";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param(str_repeat('s', count($params)), ...$params);
 $stmt->execute();
 $result = $stmt->get_result();
+
+// For re-rendering the checkboxes
+$allDepartments = [
+  "planning and design", "construction and maintenance", "procurement", "finance and accounts",
+  "human resource and administration", "legal services", "corporate communications", "ict",
+  "environment and social safeguards", "internal audit", "quality assurance",
+  "research and development", "road asset management"
+];
+
+$allRegions = [
+  "nairobi (hq)", "upper eastern", "lower eastern", "coast", "south rift",
+  "north rift", "central", "nyanza", "north eastern", "western"
+];
 ?>
 
 <!DOCTYPE html>
@@ -35,20 +60,25 @@ $result = $stmt->get_result();
       padding: 40px;
     }
 
-    h2 {
-      color: #003366;
-      margin-bottom: 20px;
+    h2 { color: #003366; margin-bottom: 20px; }
+
+    .filter-form {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
-    .search-form {
-      margin-bottom: 20px;
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 10px;
     }
 
-    .search-form input[type="text"] {
-      padding: 10px;
-      width: 300px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    .filter-group label {
+      font-size: 14px;
     }
 
     .card {
@@ -59,16 +89,9 @@ $result = $stmt->get_result();
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .card h3 {
-      color: #0055aa;
-      margin: 0 0 10px;
-    }
+    .card h3 { color: #0055aa; margin-bottom: 10px; }
 
-    .card p {
-      margin: 6px 0;
-      font-size: 15px;
-      color: #333;
-    }
+    .card p { margin: 6px 0; font-size: 15px; color: #333; }
 
     .badge {
       background: #003366;
@@ -91,9 +114,7 @@ $result = $stmt->get_result();
       font-weight: 600;
     }
 
-    .enroll-btn:hover {
-      background: #00662f;
-    }
+    .enroll-btn:hover { background: #00662f; }
 
     .no-data {
       font-style: italic;
@@ -101,37 +122,97 @@ $result = $stmt->get_result();
       padding: 20px;
       background: #fff;
       border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .submit-btn {
+      background: #003366;
+      color: white;
+      padding: 8px 20px;
+      border: none;
+      border-radius: 6px;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
-  <h2>📚 Available Trainings for <?= htmlspecialchars($department) ?> / <?= htmlspecialchars($region) ?></h2>
+<h2>📚 Available Trainings</h2>
+<a href="dashboard.php" style="
+  display: inline-block;
+  margin: 15px 0;
+  padding: 10px 20px;
+  background: #003366;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: bold;
+">⬅ Back to Dashboard</a>
 
-  <form method="get" class="search-form">
-    <input type="text" name="search" placeholder="Search by title or date..." value="<?= htmlspecialchars($search) ?>">
-  </form>
 
-  <?php if ($result->num_rows > 0): ?>
-    <?php while ($row = $result->fetch_assoc()) { ?>
-      <div class="card">
-        <h3><?= htmlspecialchars($row['title']) ?></h3>
-        <p><strong>Description:</strong> <?= htmlspecialchars($row['description']) ?></p>
-        <p><strong>Date:</strong> <?= htmlspecialchars($row['training_date']) ?></p>
-        <p><strong>Time of Delivery:</strong> <?= htmlspecialchars($row['time_of_delivery']) ?></p>
-        <p><strong>Mode of Delivery:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
-        <p><strong>Assessment Type:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
-        <p><strong>Material:</strong> 
-          <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a>
-        </p>
-        <span class="badge"><?= htmlspecialchars($row['department']) ?> Department</span><br>
-        <a class="enroll-btn" href="enroll.php?training_id=<?= $row['id'] ?>">Enroll</a>
-      </div>
-    <?php } ?>
-  <?php else: ?>
-    <div class="no-data">No trainings found for your department or region.</div>
-  <?php endif; ?>
+<form method="GET" class="filter-form">
+  <label>🔎 Search:</label><br>
+  <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Search by title or date...">
+
+  <div style="margin-top: 15px;">
+    <strong>📂 Departments:</strong>
+    <div class="filter-group">
+      <?php foreach ($allDepartments as $dept): ?>
+        <label>
+          <input type="checkbox" name="departments[]" value="<?= $dept ?>"
+            <?= in_array($dept, $departmentFilter) ? 'checked' : '' ?>>
+          <?= ucwords($dept) ?>
+        </label>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <div style="margin-top: 15px;">
+    <strong>📍 Regions:</strong>
+    <div class="filter-group">
+      <?php foreach ($allRegions as $reg): ?>
+        <label>
+          <input type="checkbox" name="regions[]" value="<?= $reg ?>"
+            <?= in_array($reg, $regionFilter) ? 'checked' : '' ?>>
+          <?= ucwords($reg) ?>
+        </label>
+      <?php endforeach; ?>
+    </div>
+  </div>
+
+  <button type="submit" class="submit-btn">Apply Filters</button>
+</form>
+
+<?php if ($result->num_rows > 0): ?>
+ <?php while ($row = $result->fetch_assoc()) { ?>
+  <div class="card">
+    <h3><?= htmlspecialchars($row['title']) ?></h3>
+    
+    <p><strong>Description:</strong> <?= htmlspecialchars($row['description']) ?></p>
+
+    <!-- ✅ Date with full timestamp -->
+    <p><strong>Date:</strong> <?= date('M d, Y H:i', strtotime($row['training_date'])) ?></p>
+
+    <!-- ✅ Newly added fields -->
+    <p><strong>Time:</strong> <?= htmlspecialchars($row['time_of_delivery']) ?></p>
+    <p><strong>Mode:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
+    <p><strong>Assessment:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
+
+    <!-- ✅ Training material -->
+    <p><strong>Material:</strong> 
+      <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a>
+    </p>
+
+    <!-- ✅ Department badge -->
+    <span class="badge"><?= htmlspecialchars($row['department']) ?> Department</span><br>
+
+    <!-- ✅ Enroll button -->
+    <a class="enroll-btn" href="enroll.php?training_id=<?= $row['id'] ?>">Enroll</a>
+  </div>
+<?php } ?>
+
+<?php else: ?>
+  <div class="no-data">No trainings found for your selection.</div>
+<?php endif; ?>
 
 </body>
 </html>

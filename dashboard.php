@@ -264,6 +264,10 @@ if ($role === 'hr' || $role === 'dept-head' || $role === 'employee') {
             <h3>📊 Reports</h3>
             <p>Monitor statistics and analytics.</p>
           </a>
+          <a href="view_trainings_set.php" class="card">
+            <h3>📋 View Trainings Set</h3>
+            <p>View trainings that you have set</p>
+          </a>
         <?php } ?>
 
         <?php if ($role === 'dept-head') { ?>
