@@ -127,7 +127,22 @@ $result = $stmt->get_result();
       <p><strong>Mode:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
       <p><strong>Assessment:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
       <p><strong>Material:</strong> <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a></p>
-      <a class="enroll-btn" href="enroll.php?training_id=<?= $row['id'] ?>">Enroll</a>
+      <?php
+$user_id = $_SESSION['user_id'];
+$tid = $row['id'];
+$enrolledCheck = $conn->prepare("SELECT id FROM enrollments WHERE user_id = ? AND training_id = ?");
+$enrolledCheck->bind_param("ii", $user_id, $tid);
+$enrolledCheck->execute();
+$enrolledCheck->store_result();
+
+if ($enrolledCheck->num_rows > 0) {
+    echo '<span class="badge" style="background: green;">✅ Enrolled</span>';
+} else {
+    echo '<a class="enroll-btn" href="enroll.php?training_id=' . $tid . '">Enroll</a>';
+}
+$enrolledCheck->close();
+?>
+
     </div>
   <?php } ?>
 <?php else: ?>
