@@ -27,7 +27,7 @@ $training_stmt->close();
 $sql = "
   SELECT u.fullname, u.email, u.department, u.region, e.enrolled_at
   FROM enrollments e
-  JOIN users u ON e.user_id = u.id
+  JOIN users u ON e.user = u.id
   WHERE e.training_id = ?
   ORDER BY e.enrolled_at DESC
 ";

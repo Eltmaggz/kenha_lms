@@ -130,7 +130,7 @@ $result = $stmt->get_result();
       <?php
 $user_id = $_SESSION['user_id'];
 $tid = $row['id'];
-$enrolledCheck = $conn->prepare("SELECT id FROM enrollments WHERE user_id = ? AND training_id = ?");
+$enrolledCheck = $conn->prepare("SELECT id FROM enrollments WHERE user = ? AND training_id = ?");
 $enrolledCheck->bind_param("ii", $user_id, $tid);
 $enrolledCheck->execute();
 $enrolledCheck->store_result();
