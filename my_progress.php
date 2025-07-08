@@ -4,20 +4,21 @@ if (!isset($_SESSION['email'])) {
   header("Location: index.html");
   exit();
 }
+
 include 'config.php';
 
 $email = $_SESSION['email'];
+$fullname = $_SESSION['fullname'];
+$role = $_SESSION['role'];
+$department = $_SESSION['department'];
+$region = $_SESSION['region'];
+$userId = $_SESSION['user_id'];
+$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-// Get user_id based on email
-$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
-$stmt->bind_param("s", $email);
-$stmt->execute();
-$userResult = $stmt->get_result();
-$user = $userResult->fetch_assoc();
-$userId = $user['id'] ?? 0;
-$stmt->close();
+if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
+    $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
+}
 
-// Now fetch progress using user_id
 $query = "
 SELECT t.title, t.training_date, 
        CASE 
@@ -27,7 +28,7 @@ SELECT t.title, t.training_date,
        END AS status
 FROM trainings t
 JOIN enrollments e ON t.id = e.training_id
-WHERE e.user_id = ?
+WHERE e.user = ?
 ORDER BY t.training_date DESC
 ";
 $stmt = $conn->prepare($query);
@@ -41,41 +42,56 @@ $result = $stmt->get_result();
 <head>
   <meta charset="UTF-8">
   <title>My Training Progress</title>
-  <style>
-    body { font-family: Arial; background: #f4f7fc; padding: 40px; }
-    h2 { color: #003366; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-radius: 8px; overflow: hidden; }
-    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-    th { background-color: #003366; color: white; }
-    tr:last-child td { border-bottom: none; }
-    .status-completed { color: green; font-weight: bold; }
-    .status-ongoing { color: #ff9800; font-weight: bold; }
-    .status-pending { color: #bb0000; font-weight: bold; }
-    .empty { margin-top: 20px; font-style: italic; color: #888; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>📈 My Training Progress</h2>
+  <div class="sidebar">
+    <img src="<?= $profilePhoto ?>" alt="Profile Photo">
+    <h3><?= htmlspecialchars($fullname) ?></h3>
+    <p><?= htmlspecialchars($email) ?></p>
+    <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-  <?php if ($result->num_rows > 0) { ?>
-    <table>
-      <tr>
-        <th>Title</th>
-        <th>Date</th>
-        <th>Status</th>
-      </tr>
-      <?php while ($row = $result->fetch_assoc()) { ?>
+    <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
+      <label for="profilePic" class="upload-label">📸 Upload Photo</label>
+      <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
+    </form>
+
+    <div class="nav">
+      <a href="dashboard.php">🏠 Dashboard</a>
+      <a href="view_trainings.php">📚 View Trainings</a>
+      <a href="add_training.php">➕ Add Training</a>
+      <a href="my_progress.php">📈 My Progress</a>
+      <a href="reports.php">📊 Reports</a>
+      <a href="schedule_training.php">🗓️ Schedule Training</a>
+      <a href="view_my_trainings.php">👤 My Trainings</a>
+      <a href="approve_requests.php">✅ Approve Requests</a>
+    </div>
+    <a href="logout.php" class="logout">🚪 Logout</a>
+  </div>
+
+  <div class="main-content">
+    <h2>📈 My Training Progress</h2>
+
+    <?php if ($result->num_rows > 0) { ?>
+      <table class="styled-table">
         <tr>
-          <td><?php echo htmlspecialchars($row['title']); ?></td>
-          <td><?php echo htmlspecialchars($row['training_date']); ?></td>
-          <td class="status-<?php echo strtolower($row['status']); ?>">
-            <?php echo htmlspecialchars($row['status']); ?>
-          </td>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Status</th>
         </tr>
-      <?php } ?>
-    </table>
-  <?php } else { ?>
-    <p class="empty">You haven't enrolled in any training sessions yet.</p>
-  <?php } ?>
+        <?php while ($row = $result->fetch_assoc()) { ?>
+          <tr>
+            <td><?= htmlspecialchars($row['title']) ?></td>
+            <td><?= htmlspecialchars($row['training_date']) ?></td>
+            <td class="status-<?= strtolower($row['status']) ?>">
+              <?= htmlspecialchars($row['status']) ?>
+            </td>
+          </tr>
+        <?php } ?>
+      </table>
+    <?php } else { ?>
+      <p class="empty">You haven't enrolled in any training sessions yet.</p>
+    <?php } ?>
+  </div>
 </body>
 </html>

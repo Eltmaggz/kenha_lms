@@ -13,9 +13,7 @@ if (!$training_id) {
     exit();
 }
 
-// Fetch training title
-$training_sql = "SELECT title FROM trainings WHERE id = ?";
-$training_stmt = $conn->prepare($training_sql);
+$training_stmt = $conn->prepare("SELECT title FROM trainings WHERE id = ?");
 $training_stmt->bind_param("i", $training_id);
 $training_stmt->execute();
 $training_result = $training_stmt->get_result();
@@ -23,7 +21,6 @@ $training = $training_result->fetch_assoc();
 $training_title = $training['title'] ?? 'Unknown Training';
 $training_stmt->close();
 
-// Get enrolled users
 $sql = "
   SELECT u.fullname, u.email, u.department, u.region, e.enrolled_at
   FROM enrollments e
@@ -42,96 +39,40 @@ $result = $stmt->get_result();
 <head>
   <meta charset="UTF-8">
   <title>Enrolled Users - <?= htmlspecialchars($training_title) ?></title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f7faff;
-      padding: 40px;
-    }
-
-    .container {
-      background: white;
-      border-radius: 10px;
-      padding: 30px;
-      max-width: 900px;
-      margin: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    }
-
-    h2 {
-      color: #003366;
-      margin-bottom: 20px;
-    }
-
-    .back-btn {
-      display: inline-block;
-      margin-bottom: 20px;
-      background: #003366;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 6px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 12px;
-      text-align: left;
-    }
-
-    th {
-      background: #00793a;
-      color: white;
-    }
-
-    tr:nth-child(even) {
-      background: #f2f2f2;
-    }
-
-    .no-data {
-      font-style: italic;
-      color: #666;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="main.css">
 </head>
 <body>
-  <div class="container">
-    <a href="view_my_trainings.php" class="back-btn">⬅ Back to My Trainings</a>
-    <h2>👥 Enrolled Users - <?= htmlspecialchars($training_title) ?></h2>
+<?php include 'profile_sidebar.php'; ?>
+<div class="main-content">
+  <h2>👥 Enrolled Users - <?= htmlspecialchars($training_title) ?></h2>
+  <a href="view_my_trainings.php" class="back-btn">⬅ Back</a>
 
-    <?php if ($result->num_rows > 0): ?>
-      <table>
-        <thead>
+  <?php if ($result->num_rows > 0): ?>
+    <table>
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Department</th>
+          <th>Region</th>
+          <th>Enrolled At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php while ($row = $result->fetch_assoc()): ?>
           <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Department</th>
-            <th>Region</th>
-            <th>Enrolled At</th>
+            <td><?= htmlspecialchars($row['fullname']) ?></td>
+            <td><?= htmlspecialchars($row['email']) ?></td>
+            <td><?= htmlspecialchars($row['department']) ?></td>
+            <td><?= htmlspecialchars($row['region']) ?></td>
+            <td><?= date('M d, Y H:i', strtotime($row['enrolled_at'])) ?></td>
           </tr>
-        </thead>
-        <tbody>
-          <?php while ($row = $result->fetch_assoc()): ?>
-            <tr>
-              <td><?= htmlspecialchars($row['fullname']) ?></td>
-              <td><?= htmlspecialchars($row['email']) ?></td>
-              <td><?= htmlspecialchars($row['department']) ?></td>
-              <td><?= htmlspecialchars($row['region']) ?></td>
-              <td><?= date('M d, Y H:i', strtotime($row['enrolled_at'])) ?></td>
-            </tr>
-          <?php endwhile; ?>
-        </tbody>
-      </table>
-    <?php else: ?>
-      <p class="no-data">No users have enrolled in this training yet.</p>
-    <?php endif; ?>
-  </div>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  <?php else: ?>
+    <p class="no-data">No users have enrolled in this training yet.</p>
+  <?php endif; ?>
+</div>
 </body>
 </html>
