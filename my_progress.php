@@ -8,17 +8,17 @@ if (!isset($_SESSION['email'])) {
 include 'config.php';
 
 $email = $_SESSION['email'];
-$fullname = $_SESSION['fullname'];
-$role = $_SESSION['role'];
-$department = $_SESSION['department'];
-$region = $_SESSION['region'];
-$userId = $_SESSION['user_id'];
-$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
-if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
-    $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
-}
+// Get user_id based on email
+$stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+$stmt->bind_param("s", $email);
+$stmt->execute();
+$userResult = $stmt->get_result();
+$user = $userResult->fetch_assoc();
+$userId = $user['id'] ?? 0;
+$stmt->close();
 
+// Now fetch progress using user_id
 $query = "
 SELECT t.title, t.training_date, 
        CASE 
@@ -32,7 +32,7 @@ WHERE e.user = ?
 ORDER BY t.training_date DESC
 ";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $userId);
+$stmt->bind_param("i", $user);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
