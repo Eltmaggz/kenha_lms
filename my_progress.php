@@ -8,16 +8,16 @@ include 'config.php';
 
 $email = $_SESSION['email'];
 
-// Get user_id based on email
+// Get user based on email
 $stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $userResult = $stmt->get_result();
 $user = $userResult->fetch_assoc();
-$userId = $user['id'] ?? 0;
+$user = $user['id'] ?? 0;
 $stmt->close();
 
-// Now fetch progress using user_id
+// Now fetch progress using user
 $query = "
 SELECT t.title, t.training_date, 
        CASE 
@@ -27,11 +27,11 @@ SELECT t.title, t.training_date,
        END AS status
 FROM trainings t
 JOIN enrollments e ON t.id = e.training_id
-WHERE e.user_id = ?
+WHERE e.user = ?
 ORDER BY t.training_date DESC
 ";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $userId);
+$stmt->bind_param("i", $user);
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
