@@ -17,7 +17,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   $stmt->bind_param("sssss", $title, $date, $description, $department, $region);
   $stmt->execute();
   $stmt->close();
-  $conn->close();
   $message = "✅ Training scheduled successfully.";
 }
 ?>
@@ -27,29 +26,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
   <meta charset="UTF-8">
   <title>Schedule Training</title>
-  <style>
-    body { font-family: Arial; background: #eef3f7; padding: 40px; }
-    .container { background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: auto; }
-    h2 { color: #003366; }
-    label { display: block; margin-top: 10px; }
-    input, textarea { width: 100%; padding: 10px; margin-top: 5px; }
-    button { margin-top: 20px; background: #00793a; color: white; border: none; padding: 10px 20px; border-radius: 6px; }
-    .msg { margin-top: 20px; color: green; }
-  </style>
+  <link rel="stylesheet" href="main.css">
 </head>
 <body>
-  <div class="container">
-    <h2>Schedule Department Training</h2>
-    <?php if (!empty($message)) echo "<p class='msg'>$message</p>"; ?>
-    <form method="POST">
-      <label>Training Title</label>
-      <input type="text" name="title" required>
-      <label>Date</label>
-      <input type="date" name="date" required>
-      <label>Description</label>
-      <textarea name="description" required></textarea>
-      <button type="submit">Schedule</button>
-    </form>
-  </div>
+<?php include 'profile_sidebar.php'; ?>
+<div class="main-content">
+  <h2>📅 Schedule Department Training</h2>
+  <?php if (!empty($message)) echo "<p class='success-msg'>$message</p>"; ?>
+  <form method="POST" class="form-box">
+    <label>Training Title</label>
+    <input type="text" name="title" required>
+
+    <label>Date</label>
+    <input type="date" name="date" required>
+
+    <label>Description</label>
+    <textarea name="description" required></textarea>
+
+    <button type="submit">Schedule</button>
+  </form>
+</div>
 </body>
 </html>
