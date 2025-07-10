@@ -52,18 +52,25 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
       <label for="profilePic" class="upload-label">📸 Upload Photo</label>
       <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
     </form>
+<div class="nav">
+  <a href="dashboard.php">🏠 Dashboard</a>
+  <a href="view_trainings.php">📚 View Trainings</a>
 
-    <div class="nav">
-      <a href="dashboard.php">🏠 Dashboard</a>
-      <a href="view_trainings.php">📚 View Trainings</a>
-      <a href="add_training.php">➕ Add Training</a>
-      <a href="my_progress.php">📈 My Progress</a>
-      <a href="reports.php">📊 Reports</a>
-      <a href="schedule_training.php">🗓️ Schedule Training</a>
-      <a href="view_my_trainings.php">👤 My Trainings</a>
-    </div>
-    <a href="logout.php" class="logout">🚪 Logout</a>
-  </div>
+  <?php if ($role === 'hr'): ?>
+    <a href="add_training.php">➕ Add Training</a>
+    <a href="view_my_trainings.php">👤 My Trainings</a>
+    <a href="approve_requests.php">✅ Approve Requests</a>
+    <a href="reports.php">📊 Reports</a>
+
+  <?php elseif ($role === 'dept-head'): ?>
+    <a href="schedule_training.php">🗓️ Schedule Training</a>
+    <a href="reports.php">📊 Reports</a>
+
+  <?php elseif ($role === 'employee'): ?>
+    <a href="my_progress.php">📈 My Progress</a>
+  <?php endif; ?>
+</div>
+
 
   <div class="main-content">
     <div class="top-bar">

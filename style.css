@@ -387,4 +387,61 @@ h2 {
   background-color: #0055aa;
   color: white;
 }
+.remove-btn {
+  background-color: var(--kenha-red);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.remove-btn:hover {
+  background-color: #bb1e1e;
+}
+.sidebar {
+  width: 280px;
+  background-color: var(--kenha-dark);
+  color: white;
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  overflow-y: auto; /* ✅ Make sidebar scrollable */
+}
+
+
+
+.sidebar-profile {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.sidebar-profile {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+.main-content {
+  margin-left: 280px;
+  padding: 30px;
+  overflow-x: hidden;
+}
+
+body, html {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--kenha-bg);
+  height: 100%;
+  overflow-x: hidden;
+}
+
 

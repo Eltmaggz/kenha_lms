@@ -17,21 +17,23 @@ $res->bind_result($photo);
 $res->fetch();
 $res->close();
 
-if ($photo && $photo !== 'default-avatar.png') {
+// Delete actual photo if it's not empty
+if (!empty($photo) && $photo !== 'default-avatar.png') {
     $filePath = 'uploads/' . $photo;
     if (file_exists($filePath)) {
         unlink($filePath);
     }
 }
 
-// Reset photo in DB and session
+// Clear from DB and session
 $stmt = $conn->prepare("UPDATE users SET profile_photo = NULL WHERE email = ?");
 $stmt->bind_param("s", $email);
 $stmt->execute();
 $stmt->close();
 
-$_SESSION['profile_photo'] = 'default-avatar.png';
+unset($_SESSION['profile_photo']);
 
-header("Location: dashboard.php");
+// Redirect to the previous page
+header("Location: " . $_SERVER['HTTP_REFERER']);
 exit();
 ?>
