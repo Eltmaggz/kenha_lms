@@ -19,18 +19,29 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
   $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
 
-// Dynamic statistics
+// Default counts
 $pending = $scheduled = $reports = 0;
 
+// HR and employee stats
 if (in_array($role, ['hr', 'dept-head', 'employee'])) {
-  $pendingQuery = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'");
-  $pending = $pendingQuery ? ($pendingQuery->fetch_row()[0] ?? 0) : 0;
+  $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
+  $scheduled = $conn->query("SELECT COUNT(*) FROM trainings WHERE WEEK(training_date) = WEEK(CURDATE())")->fetch_row()[0] ?? 0;
+  $reports = $conn->query("SELECT COUNT(*) FROM reports")->fetch_row()[0] ?? 0;
+}
 
-  $scheduledQuery = $conn->query("SELECT COUNT(*) FROM trainings WHERE WEEK(training_date) = WEEK(CURDATE())");
-  $scheduled = $scheduledQuery ? ($scheduledQuery->fetch_row()[0] ?? 0) : 0;
-
-  $reportsQuery = $conn->query("SELECT COUNT(*) FROM reports");
-  $reports = $reportsQuery ? ($reportsQuery->fetch_row()[0] ?? 0) : 0;
+// Trainer trainings
+$trainerTrainings = [];
+if ($role === 'trainer') {
+  $stmt = $conn->prepare("
+    SELECT t.id, t.title, t.description, t.training_date
+    FROM trainings t
+    JOIN trainer_assignments ta ON t.id = ta.training_id
+    WHERE ta.trainer_id = ?
+    ORDER BY t.training_date DESC
+  ");
+  $stmt->bind_param("i", $userId);
+  $stmt->execute();
+  $trainerTrainings = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 ?>
 
@@ -42,7 +53,7 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="dashboard"><!-- WRAPPER FOR SIDEBAR + MAIN -->
+<div class="dashboard">
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -55,15 +66,15 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
       <label for="profilePic" class="upload-label">📸 Upload Photo</label>
       <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
     </form>
-
     <form method="POST" action="remove_photo.php">
       <button type="submit" class="remove-btn">❌ Remove Photo</button>
     </form>
 
-    <!-- NAVIGATION -->
     <div class="nav">
       <a href="dashboard.php">🏠 Dashboard</a>
-      <a href="view_trainings.php">📚 View Trainings</a>
+      <?php if ($role !== 'trainer'): ?>
+        <a href="view_trainings.php">📚 View Trainings</a>
+      <?php endif; ?>
 
       <?php if ($role === 'hr'): ?>
         <a href="add_training.php">➕ Add Training</a>
@@ -77,6 +88,10 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
 
       <?php if ($role === 'employee'): ?>
         <a href="my_progress.php">📈 My Progress</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'trainer'): ?>
+        <a href="trainer_dashboard.php">🎓 My Classrooms</a>
       <?php endif; ?>
 
       <a href="reports.php">📊 Reports</a>
@@ -97,35 +112,58 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
     </div>
 
     <div class="cards">
-      <a class="card" href="view_trainings.php">
-        <h3>📚 View Trainings</h3>
-        <p><?= $scheduled ?> trainings scheduled this week</p>
-      </a>
-      <a class="card" href="my_progress.php">
-        <h3>📈 My Progress</h3>
-        <p>Track your enrolled trainings</p>
-      </a>
+      <?php if ($role !== 'trainer'): ?>
+        <a class="card" href="view_trainings.php">
+          <h3>📚 View Trainings</h3>
+          <p><?= $scheduled ?> trainings scheduled this week</p>
+        </a>
+      <?php endif; ?>
+
+      <?php if ($role === 'employee'): ?>
+        <a class="card" href="my_progress.php">
+          <h3>📈 My Progress</h3>
+          <p>Track your enrolled trainings</p>
+        </a>
+      <?php endif; ?>
 
       <?php if ($role === 'hr'): ?>
         <a class="card" href="add_training.php">
           <h3>➕ Add Training</h3>
-          <p>Create a new training session</p>
+          <p>Create new training sessions</p>
         </a>
         <a class="card" href="view_my_trainings.php">
           <h3>👤 My Trainings</h3>
-          <p>Manage your created trainings</p>
+          <p>Manage created trainings</p>
         </a>
         <a class="card" href="approve_requests.php">
           <h3>✅ Approve Requests</h3>
-          <p><?= $pending ?> pending training requests</p>
+          <p><?= $pending ?> pending requests</p>
         </a>
       <?php endif; ?>
 
       <?php if ($role === 'dept-head'): ?>
         <a class="card" href="schedule_training.php">
           <h3>🗓️ Schedule Training</h3>
-          <p>Request training for your department</p>
+          <p>Request new trainings</p>
         </a>
+      <?php endif; ?>
+
+      <?php if ($role === 'trainer'): ?>
+        <div class="card">
+          <h3>🎓 Assigned Trainings</h3>
+          <ul>
+            <?php if (!empty($trainerTrainings)): ?>
+              <?php foreach ($trainerTrainings as $t): ?>
+                <li>
+                  <?= htmlspecialchars($t['title']) ?> - 
+                  <a href="classroom.php?training_id=<?= $t['id'] ?>">Go to Classroom</a>
+                </li>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <li>No trainings assigned.</li>
+            <?php endif; ?>
+          </ul>
+        </div>
       <?php endif; ?>
 
       <a class="card" href="reports.php">
@@ -133,8 +171,7 @@ if (in_array($role, ['hr', 'dept-head', 'employee'])) {
         <p><?= $reports ?> reports submitted</p>
       </a>
     </div>
-  </div><!-- End Main Content -->
-
-</div><!-- End Dashboard Wrapper -->
+  </div>
+</div>
 </body>
 </html>
