@@ -10,28 +10,24 @@ if (!isset($_SESSION['email'])) {
 $user_id = $_SESSION['user_id'];
 $training_id = $_GET['training_id'] ?? null;
 
-if ($training_id && $user_id) {
+if ($training_id && is_numeric($training_id)) {
     // Check if already enrolled
-    $check = $conn->prepare("SELECT id FROM enrollments WHERE user = ? AND training_id = ?");
+    $check = $conn->prepare("SELECT id FROM enrollments WHERE user_id = ? AND training_id = ?");
     $check->bind_param("ii", $user_id, $training_id);
     $check->execute();
     $check->store_result();
 
     if ($check->num_rows === 0) {
-        // Not enrolled yet, insert
-        $stmt = $conn->prepare("INSERT INTO enrollments (user, training_id, status, enrolled_at) VALUES (?, ?, 'enrolled', NOW())");
-        $stmt->bind_param("ii", $user_id, $training_id);
-        $stmt->execute();
-        $stmt->close();
-        $_SESSION['message'] = "✅ Successfully enrolled!";
-    } else {
-        $_SESSION['message'] = "⚠️ You have already enrolled in this training.";
+        $insert = $conn->prepare("INSERT INTO enrollments (user_id, training_id) VALUES (?, ?)");
+        $insert->bind_param("ii", $user_id, $training_id);
+        $insert->execute();
+        $insert->close();
     }
 
     $check->close();
 }
 
-$conn->close();
+// Redirect back to view_trainings
 header("Location: view_trainings.php");
 exit();
 ?>

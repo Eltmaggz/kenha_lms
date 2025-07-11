@@ -15,8 +15,9 @@ $userRegion = $_SESSION['region'];
 $fullname = $_SESSION['fullname'] ?? 'User';
 $email = $_SESSION['email'] ?? '';
 $role = $_SESSION['role'] ?? 'employee';
-$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+$user_id = $_SESSION['user_id'];
 
+$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
     $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
@@ -86,7 +87,19 @@ $result = $stmt->get_result();
   </form>
 
   <?php if ($result->num_rows > 0): ?>
-    <?php while ($row = $result->fetch_assoc()) { ?>
+    <?php while ($row = $result->fetch_assoc()) {
+      $tid = $row['id'];
+      $trainingDate = date('Y-m-d', strtotime($row['training_date']));
+      $today = date('Y-m-d');
+
+      // Check enrollment
+      $check = $conn->prepare("SELECT id FROM enrollments WHERE user_id = ? AND training_id = ?");
+      $check->bind_param("ii", $user_id, $tid);
+      $check->execute();
+      $check->store_result();
+      $enrolled = $check->num_rows > 0;
+      $check->close();
+    ?>
       <div class="card">
         <h3><?= htmlspecialchars($row['title']) ?></h3>
         <p><strong>Description:</strong> <?= htmlspecialchars($row['description']) ?></p>
@@ -95,21 +108,17 @@ $result = $stmt->get_result();
         <p><strong>Mode:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
         <p><strong>Assessment:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
         <p><strong>Material:</strong> <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a></p>
-        <?php
-        $user_id = $_SESSION['user_id'];
-        $tid = $row['id'];
-        $enrolledCheck = $conn->prepare("SELECT id FROM enrollments WHERE user = ? AND training_id = ?");
-        $enrolledCheck->bind_param("ii", $user_id, $tid);
-        $enrolledCheck->execute();
-        $enrolledCheck->store_result();
 
-        if ($enrolledCheck->num_rows > 0) {
-            echo '<span class="badge" style="background: green;">✅ Enrolled</span>';
-        } else {
-            echo '<a class="enroll-btn" href="enroll.php?training_id=' . $tid . '">Enroll</a>';
-        }
-        $enrolledCheck->close();
-        ?>
+        <?php if ($enrolled): ?>
+          <span class="badge" style="background: green;">✅ Enrolled</span><br>
+          <?php if ($today === $trainingDate): ?>
+            <a class="enroll-btn" style="margin-top:6px;background:#003366;" href="classroom.php?training_id=<?= $tid ?>">📘 To Classroom</a>
+          <?php else: ?>
+            <p style="color: gray; font-size: 13px;">Classroom opens on <?= date('M d, Y', strtotime($trainingDate)) ?></p>
+          <?php endif; ?>
+        <?php else: ?>
+          <a class="enroll-btn" href="enroll.php?training_id=<?= $tid ?>">Enroll</a>
+        <?php endif; ?>
       </div>
     <?php } ?>
   <?php else: ?>
