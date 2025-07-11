@@ -1,5 +1,3 @@
-/* KeNHA LMS Global Styles - style.css */
-
 :root {
   --kenha-dark: #003366;
   --kenha-orange: #f8a800;
@@ -10,7 +8,6 @@
   --kenha-grey: #888;
 }
 
-/* Reset and base */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -22,6 +19,7 @@ body, html {
   background-color: var(--kenha-bg);
   height: 100%;
   color: #333;
+  overflow-x: hidden;
 }
 
 /* Sidebar */
@@ -37,6 +35,7 @@ body, html {
   position: fixed;
   left: 0;
   top: 0;
+  overflow-y: auto;
 }
 
 .sidebar img {
@@ -47,7 +46,8 @@ body, html {
   border: 4px solid #fff;
 }
 
-.sidebar h3, .sidebar p {
+.sidebar h3,
+.sidebar p {
   margin: 10px 0;
   text-align: center;
 }
@@ -82,6 +82,7 @@ body, html {
   margin-bottom: 20px;
 }
 
+/* Profile Upload */
 .profile-upload {
   margin-top: 10px;
 }
@@ -101,10 +102,17 @@ body, html {
   margin-top: 8px;
 }
 
+.sidebar-profile {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
 /* Main Content */
 .main-content {
   margin-left: 280px;
   padding: 30px;
+  flex-grow: 1;
   overflow-y: auto;
 }
 
@@ -112,7 +120,7 @@ body, html {
   background: white;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   margin-bottom: 30px;
 }
 
@@ -160,7 +168,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   background: white;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
   margin-top: 20px;
@@ -224,6 +232,28 @@ form select {
   margin-top: 10px;
 }
 
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.checkbox-label {
+  background: #f4f4f4;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  user-select: none;
+}
+
+.checkbox-label input {
+  margin-right: 6px;
+}
+
+/* Buttons */
 button, .btn {
   background: var(--kenha-green);
   color: white;
@@ -234,6 +264,40 @@ button, .btn {
   cursor: pointer;
 }
 
+.btn-success {
+  background-color: var(--kenha-green);
+  color: white;
+}
+
+.btn-blue {
+  background-color: #0055aa;
+  color: white;
+}
+
+.remove-btn {
+  background-color: var(--kenha-red);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.logout,
+.remove-btn {
+  margin-bottom: 30px;
+}
+
+.remove-btn:hover {
+  background-color: #bb1e1e;
+}
+
+/* Extra Styling */
 .back-btn {
   background: var(--kenha-dark);
   color: white;
@@ -251,7 +315,7 @@ button, .btn {
   border-radius: 10px;
   max-width: 900px;
   margin: auto;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
 h2 {
@@ -265,16 +329,10 @@ h2 {
   margin-top: 20px;
 }
 
-.msg {
+.msg, .message {
   color: green;
   margin-top: 20px;
   font-weight: bold;
-}
-
-.message {
-  margin-top: 20px;
-  font-weight: bold;
-  color: green;
 }
 
 .search-form input {
@@ -290,7 +348,7 @@ h2 {
   padding: 15px;
   margin-bottom: 30px;
   border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .filter-group {
@@ -353,95 +411,15 @@ h2 {
   }
 }
 
-.checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 10px;
+@media screen and (max-height: 600px) {
+  .sidebar-profile {
+    max-height: 50vh;
+  }
 }
 
-.checkbox-label {
-  background: #f4f4f4;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  user-select: none;
-}
-
-.checkbox-label input {
-  margin-right: 6px;
-}
 .dashboard {
   display: flex;
   min-height: 100vh;
   width: 100%;
+  overflow: hidden;
 }
-.btn-success {
-  background-color: var(--kenha-green);
-  color: white;
-}
-
-.btn-blue {
-  background-color: #0055aa;
-  color: white;
-}
-.remove-btn {
-  background-color: var(--kenha-red);
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  margin-top: 10px;
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-
-.remove-btn:hover {
-  background-color: #bb1e1e;
-}
-.sidebar {
-  width: 280px;
-  background-color: var(--kenha-dark);
-  color: white;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100vh;
-  position: fixed;
-  left: 0;
-  top: 0;
-  overflow-y: auto; /* ✅ Make sidebar scrollable */
-}
-
-
-
-.sidebar-profile {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-.sidebar-profile {
-  max-height: 65vh;
-  overflow-y: auto;
-  padding: 20px;
-}
-.main-content {
-  margin-left: 280px;
-  padding: 30px;
-  overflow-x: hidden;
-}
-
-body, html {
-  font-family: 'Inter', sans-serif;
-  background-color: var(--kenha-bg);
-  height: 100%;
-  overflow-x: hidden;
-}
-
-
