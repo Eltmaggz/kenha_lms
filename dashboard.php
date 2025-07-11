@@ -91,7 +91,7 @@ if ($role === 'trainer') {
       <?php endif; ?>
 
       <?php if ($role === 'trainer'): ?>
-        <a href="trainer_dashboard.php">🎓 My Classrooms</a>
+        <a href="trainer/add_material.php?training_id=...">Add Material</a> My Classrooms</a>
       <?php endif; ?>
 
       <a href="reports.php">📊 Reports</a>
@@ -149,22 +149,22 @@ if ($role === 'trainer') {
       <?php endif; ?>
 
       <?php if ($role === 'trainer'): ?>
-        <div class="card">
-          <h3>🎓 Assigned Trainings</h3>
-          <ul>
-            <?php if (!empty($trainerTrainings)): ?>
-              <?php foreach ($trainerTrainings as $t): ?>
-                <li>
-                  <?= htmlspecialchars($t['title']) ?> - 
-                  <a href="classroom.php?training_id=<?= $t['id'] ?>">Go to Classroom</a>
-                </li>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <li>No trainings assigned.</li>
-            <?php endif; ?>
-          </ul>
+  <div class="card">
+    <h3>🎓 Assigned Trainings</h3>
+    <?php if (!empty($trainerTrainings)): ?>
+      <?php foreach ($trainerTrainings as $t): ?>
+        <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+          <strong><?= htmlspecialchars($t['title']) ?></strong><br>
+          <small><?= date('M d, Y H:i', strtotime($t['training_date'])) ?></small><br>
+          <a class="btn" href="classroom.php?training_id=<?= $t['id'] ?>">👨‍🏫 Go to Classroom</a>
+          <a class="btn" href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
         </div>
-      <?php endif; ?>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <p>No trainings assigned.</p>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
       <a class="card" href="reports.php">
         <h3>📊 Reports</h3>
