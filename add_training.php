@@ -13,24 +13,26 @@ $role = $_SESSION['role'];
 $department = $_SESSION['department'];
 $region = $_SESSION['region'];
 $userId = $_SESSION['user_id'];
-$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
-if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
-    $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
-}
+$profilePhoto = !empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])
+  ? 'uploads/' . $_SESSION['profile_photo']
+  : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 
 $message = '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $title = $_POST['title'];
-  $description = $_POST['description'];
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $title = trim($_POST['title']);
+  $description = trim($_POST['description']);
   $training_date = $_POST['training_date'];
-  $time_of_delivery = $_POST['time_of_delivery'];
-  $mode_of_delivery = $_POST['mode_of_delivery'];
-  $assessment_type = $_POST['assessment_type'];
+  $time_of_delivery = trim($_POST['time_of_delivery']);
+  $mode_of_delivery = trim($_POST['mode_of_delivery']);
+  $assessment_type = trim($_POST['assessment_type']);
   $departments = $_POST['departments'] ?? [];
 
-  $stmt = $conn->prepare("INSERT INTO trainings (title, description, training_date, time_of_delivery, mode_of_delivery, assessment_type, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  $stmt = $conn->prepare("
+    INSERT INTO trainings (title, description, training_date, time_of_delivery, mode_of_delivery, assessment_type, created_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  ");
   $stmt->bind_param("ssssssi", $title, $description, $training_date, $time_of_delivery, $mode_of_delivery, $assessment_type, $userId);
   $stmt->execute();
   $training_id = $stmt->insert_id;
@@ -38,30 +40,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
   if (!empty($departments)) {
     foreach ($departments as $dept_id) {
-      $assignStmt = $conn->prepare("INSERT INTO training_assignments (training_id, department_id) VALUES (?, ?)");
-      $assignStmt->bind_param("ii", $training_id, $dept_id);
-      $assignStmt->execute();
-      $assignStmt->close();
+      $assign = $conn->prepare("INSERT INTO training_assignments (training_id, department_id) VALUES (?, ?)");
+      $assign->bind_param("ii", $training_id, $dept_id);
+      $assign->execute();
+      $assign->close();
     }
   }
 
-  $message = "✅ Training added successfully.";
+  $message = "✅ Training added successfully and assigned to selected department(s).";
 }
 
-$deptResult = $conn->query("SELECT id, name FROM departments ORDER BY name ASC");
-$allDepartments = $deptResult->fetch_all(MYSQLI_ASSOC);
+$departmentsRes = $conn->query("SELECT id, name FROM departments ORDER BY name ASC");
+$allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Add Training</title>
+  <title>Add Training - KeNHA LMS</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+    .checkbox-label { display: flex; align-items: center; gap: 6px; }
+    .success-message { color: green; font-weight: bold; margin: 15px 0; }
+    button { background: #00793a; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 20px; cursor: pointer; }
+    label { display: block; margin-top: 15px; font-weight: bold; }
+  </style>
   <script>
-    function toggleSelectAll(source) {
-      const checkboxes = document.querySelectorAll('.department-checkbox');
-      checkboxes.forEach(cb => cb.checked = source.checked);
+    function toggleSelectAll(master) {
+      document.querySelectorAll('.department-checkbox').forEach(cb => cb.checked = master.checked);
     }
   </script>
 </head>
@@ -72,11 +80,6 @@ $allDepartments = $deptResult->fetch_all(MYSQLI_ASSOC);
   <p><?= htmlspecialchars($email) ?></p>
   <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-  <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
-    <label for="profilePic" class="upload-label">📸 Upload Photo</label>
-    <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
-  </form>
-
   <div class="nav">
     <a href="dashboard.php">🏠 Dashboard</a>
     <a href="view_trainings.php">📚 View Trainings</a>
@@ -86,13 +89,17 @@ $allDepartments = $deptResult->fetch_all(MYSQLI_ASSOC);
     <a href="schedule_training.php">🗓️ Schedule Training</a>
     <a href="view_my_trainings.php">👤 My Trainings</a>
     <a href="approve_requests.php">✅ Approve Requests</a>
+    <a href="logout.php" class="logout">🚪 Logout</a>
   </div>
-  <a href="logout.php" class="logout">🚪 Logout</a>
 </div>
 
 <div class="main-content">
   <h2>➕ Add New Training</h2>
-  <?php if (!empty($message)) echo "<p class='success-message'>$message</p>"; ?>
+
+  <?php if (!empty($message)): ?>
+    <p class="success-message"><?= $message ?></p>
+  <?php endif; ?>
+
   <form method="POST">
     <label>Title</label>
     <input type="text" name="title" required>
@@ -104,15 +111,29 @@ $allDepartments = $deptResult->fetch_all(MYSQLI_ASSOC);
     <input type="datetime-local" name="training_date" required>
 
     <label>Time of Delivery</label>
-    <input type="text" name="time_of_delivery" required>
+    <input type="text" name="time_of_delivery" required placeholder="e.g. 10:00 AM - 12:00 PM">
 
     <label>Mode of Delivery</label>
-    <input type="text" name="mode_of_delivery" required>
+    <select name="mode_of_delivery" required>
+      <option value="">--Select--</option>
+      <option value="Instructor-Led Training (ILT)">Instructor-Led Training (ILT)</option>
+      <option value="Virtual Instructor-Led Training (VILT)">Virtual Instructor-Led Training (VILT)</option>
+      <option value="E-Learning (Self-Paced)">E-Learning (Self-Paced)</option>
+      <option value="Blended Learning">Blended Learning</option>
+      <option value="On-the-Job Training (OJT)">On-the-Job Training (OJT)</option>
+    </select>
 
     <label>Assessment Type</label>
-    <input type="text" name="assessment_type" required>
+    <select name="assessment_type" required>
+      <option value="">--Select--</option>
+      <option value="Quizzes/MCQs">Quizzes/MCQs</option>
+      <option value="Assignments/Projects">Assignments/Projects</option>
+      <option value="Surveys/Feedback">Surveys/Feedback</option>
+      <option value="Self-Assessments">Self-Assessments</option>
+      <option value="Peer Reviews">Peer Reviews</option>
+    </select>
 
-    <label>Assign to Departments</label>
+    <label>Assign to Department(s)</label>
     <div>
       <label><input type="checkbox" onclick="toggleSelectAll(this)"> Select All</label>
     </div>
@@ -120,12 +141,12 @@ $allDepartments = $deptResult->fetch_all(MYSQLI_ASSOC);
       <?php foreach ($allDepartments as $dept): ?>
         <label class="checkbox-label">
           <input type="checkbox" class="department-checkbox" name="departments[]" value="<?= $dept['id'] ?>">
-          <?= htmlspecialchars(ucwords($dept['name'])) ?>
+          <?= ucwords(htmlspecialchars($dept['name'])) ?>
         </label>
       <?php endforeach; ?>
     </div>
 
-    <button type="submit">Add Training</button>
+    <button type="submit">➕ Submit Training</button>
   </form>
 </div>
 </body>
