@@ -15,8 +15,18 @@ $selectedDepartments = $_GET['departments'] ?? [];
 $selectedRegions = $_GET['regions'] ?? [];
 
 // Define full department and region arrays
-$departments = ['ict', 'human resource and administration', 'legal', 'finance', 'planning', 'technical services'];
-$regions = ['nairobi (hq)', 'central', 'coast', 'western', 'nyanza', 'rift valley', 'northern'];
+// Define updated list of departments and regions
+$departments = [
+  "planning and design", "construction and maintenance", "procurement", "finance and accounts",
+  "human resource and administration", "legal services", "corporate communications", "ict",
+  "environment and social safeguards", "internal audit", "quality assurance",
+  "research and development", "road asset management"
+];
+
+$regions = [
+  "nairobi (hq)", "upper eastern", "lower eastern", "coast", "south rift",
+  "north rift", "central", "nyanza", "north eastern", "western"
+];
 
 // Prepare filtering
 $deptFilterClause = '';
