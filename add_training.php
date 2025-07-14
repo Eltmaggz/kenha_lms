@@ -39,27 +39,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $training_id = $stmt->insert_id;
   $stmt->close();
 
-  // Assign to selected departments
+  // Assign to selected departments + assign trainers automatically
   if (!empty($departments)) {
     foreach ($departments as $dept_id) {
-      // training_assignments
+      // Assign to department
       $assign = $conn->prepare("INSERT INTO training_assignments (training_id, department_id) VALUES (?, ?)");
       $assign->bind_param("ii", $training_id, $dept_id);
       $assign->execute();
       $assign->close();
 
-      // trainer_assignments (link trainers assigned to that department)
-      $trainerQuery = $conn->prepare("SELECT user_id FROM trainer_departments WHERE department_id = ?");
+      // Automatically assign trainers for each department
+      $trainerQuery = $conn->prepare("SELECT id FROM users WHERE role = 'trainer' AND department = (SELECT name FROM departments WHERE id = ?)");
       $trainerQuery->bind_param("i", $dept_id);
       $trainerQuery->execute();
       $trainerResult = $trainerQuery->get_result();
+
       while ($trainer = $trainerResult->fetch_assoc()) {
-        $trainer_id = $trainer['user_id'];
-        $trainerAssign = $conn->prepare("INSERT IGNORE INTO trainer_assignments (training_id, trainer_id) VALUES (?, ?)");
-        $trainerAssign->bind_param("ii", $training_id, $trainer_id);
-        $trainerAssign->execute();
-        $trainerAssign->close();
+        $trainer_id = $trainer['id'];
+
+        // Check if already assigned
+        $checkStmt = $conn->prepare("SELECT id FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
+        $checkStmt->bind_param("ii", $trainer_id, $training_id);
+        $checkStmt->execute();
+        $checkStmt->store_result();
+
+        if ($checkStmt->num_rows === 0) {
+          $assignTrainer = $conn->prepare("INSERT INTO trainer_assignments (trainer_id, training_id) VALUES (?, ?)");
+          $assignTrainer->bind_param("ii", $trainer_id, $training_id);
+          $assignTrainer->execute();
+          $assignTrainer->close();
+        }
+
+        $checkStmt->close();
       }
+
       $trainerQuery->close();
     }
   }
