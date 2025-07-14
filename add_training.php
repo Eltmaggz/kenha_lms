@@ -29,6 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $assessment_type = trim($_POST['assessment_type']);
   $departments = $_POST['departments'] ?? [];
 
+  // Insert into trainings
   $stmt = $conn->prepare("
     INSERT INTO trainings (title, description, training_date, time_of_delivery, mode_of_delivery, assessment_type, created_by)
     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -38,18 +39,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $training_id = $stmt->insert_id;
   $stmt->close();
 
+  // Assign to selected departments
   if (!empty($departments)) {
     foreach ($departments as $dept_id) {
+      // training_assignments
       $assign = $conn->prepare("INSERT INTO training_assignments (training_id, department_id) VALUES (?, ?)");
       $assign->bind_param("ii", $training_id, $dept_id);
       $assign->execute();
       $assign->close();
+
+      // trainer_assignments (link trainers assigned to that department)
+      $trainerQuery = $conn->prepare("SELECT user_id FROM trainer_departments WHERE department_id = ?");
+      $trainerQuery->bind_param("i", $dept_id);
+      $trainerQuery->execute();
+      $trainerResult = $trainerQuery->get_result();
+      while ($trainer = $trainerResult->fetch_assoc()) {
+        $trainer_id = $trainer['user_id'];
+        $trainerAssign = $conn->prepare("INSERT IGNORE INTO trainer_assignments (training_id, trainer_id) VALUES (?, ?)");
+        $trainerAssign->bind_param("ii", $training_id, $trainer_id);
+        $trainerAssign->execute();
+        $trainerAssign->close();
+      }
+      $trainerQuery->close();
     }
   }
 
   $message = "✅ Training added successfully and assigned to selected department(s).";
 }
 
+// Fetch departments
 $departmentsRes = $conn->query("SELECT id, name FROM departments ORDER BY name ASC");
 $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -86,7 +104,7 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
     <a href="add_training.php">➕ Add Training</a>
     <a href="my_progress.php">📈 My Progress</a>
     <a href="reports.php">📊 Reports</a>
-    <a href="schedule_training.php">🗓️ Schedule Training</a>
+    <a href="schedule_training.php">🗓 Schedule Training</a>
     <a href="view_my_trainings.php">👤 My Trainings</a>
     <a href="approve_requests.php">✅ Approve Requests</a>
     <a href="logout.php" class="logout">🚪 Logout</a>
