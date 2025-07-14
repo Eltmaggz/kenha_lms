@@ -23,7 +23,7 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
 $pending = $scheduled = $reports = 0;
 
 // HR and employee stats
-if (in_array($role, ['hr', 'dept-head', 'employee'])) {
+if (in_array($role, ['hr', 'dept-head', 'staff','trainer'])) {
   $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
   $scheduled = $conn->query("SELECT COUNT(*) FROM trainings WHERE WEEK(training_date) = WEEK(CURDATE())")->fetch_row()[0] ?? 0;
   $reports = $conn->query("SELECT COUNT(*) FROM reports")->fetch_row()[0] ?? 0;

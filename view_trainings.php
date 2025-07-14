@@ -21,20 +21,19 @@ $profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
     $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
-
 $sql = "
-  SELECT t.*
+  SELECT DISTINCT t.*
   FROM trainings t
   JOIN training_assignments ta ON t.id = ta.training_id
   JOIN departments d ON ta.department_id = d.id
-  WHERE d.name = ? 
-    AND t.title LIKE ? OR t.training_date LIKE ?
+  WHERE d.name = ?
+    AND (t.title LIKE ? OR t.training_date LIKE ?)
   ORDER BY t.training_date DESC
 ";
 
-
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("sss", $userDept, $searchParam, $searchParam);
+
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
