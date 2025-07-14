@@ -17,7 +17,7 @@ if (!$training_id) {
     exit();
 }
 
-// Fetch training info
+// Get training info
 $stmt = $conn->prepare("SELECT * FROM trainings WHERE id = ?");
 $stmt->bind_param("i", $training_id);
 $stmt->execute();
@@ -29,22 +29,30 @@ if (!$training) {
     exit();
 }
 
-// Access control
+// Check access
 $today = date('Y-m-d');
 $trainingDate = date('Y-m-d', strtotime($training['training_date']));
 $hasAccess = false;
 
-if ($role === 'trainer' && $training['department'] === $department) {
-    $hasAccess = true;
-} elseif ($role !== 'trainer') {
-    $check = $conn->prepare("SELECT * FROM enrollments WHERE user_id = ? AND training_id = ?");
-    $check->bind_param("ii", $userId, $training_id);
-    $check->execute();
-    $res = $check->get_result();
+// Trainer access check
+if ($role === 'trainer') {
+    $trainerCheck = $conn->prepare("SELECT * FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
+    $trainerCheck->bind_param("ii", $userId, $training_id);
+    $trainerCheck->execute();
+    $trainerRes = $trainerCheck->get_result();
+    $hasAccess = $trainerRes->num_rows > 0;
+    $trainerCheck->close();
+}
+// Employee access check
+elseif ($role !== 'trainer') {
+    $enrollCheck = $conn->prepare("SELECT * FROM enrollments WHERE user_id = ? AND training_id = ?");
+    $enrollCheck->bind_param("ii", $userId, $training_id);
+    $enrollCheck->execute();
+    $res = $enrollCheck->get_result();
     if ($res->num_rows > 0 && $today === $trainingDate) {
         $hasAccess = true;
     }
-    $check->close();
+    $enrollCheck->close();
 }
 
 if (!$hasAccess) {
@@ -58,26 +66,31 @@ if (!$hasAccess) {
   <meta charset="UTF-8">
   <title>Classroom - <?= htmlspecialchars($training['title']) ?></title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 30px; background: #f0f4f8; }
-    .container { background: white; padding: 25px; border-radius: 10px; max-width: 800px; margin: auto; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-    h2 { color: #003366; }
-    .meta { margin: 10px 0; }
-    .content, .module { margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; }
+    body { font-family: Arial, sans-serif; background: #f0f4f8; padding: 40px; }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2, h3 { color: #003366; }
+    .meta { font-size: 14px; margin-bottom: 10px; color: #444; }
+    .content, .module { margin-top: 20px; background: #f9f9f9; padding: 15px; border-radius: 8px; }
+    .module { border-left: 5px solid #00793a; margin-bottom: 15px; }
     .button {
-      display: inline-block;
-      margin-top: 15px;
-      padding: 10px 18px;
       background: #00793a;
       color: white;
+      padding: 10px 16px;
       text-decoration: none;
-      border-radius: 6px;
+      display: inline-block;
+      margin-top: 15px;
+      border-radius: 5px;
     }
-    input, textarea {
+    .button:hover { background: #005f2f; }
+    input, textarea, select {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
+    form label { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -89,21 +102,20 @@ if (!$hasAccess) {
      <strong>Assessment:</strong> <?= htmlspecialchars($training['assessment_type']) ?></p>
 
   <div class="content">
-    <h4>📄 Description:</h4>
+    <h3>📄 Description</h3>
     <p><?= nl2br(htmlspecialchars($training['description'])) ?></p>
 
     <?php if ($training['material_link']): ?>
-      <h4>📂 Material:</h4>
-      <a class="button" href="<?= htmlspecialchars($training['material_link']) ?>" target="_blank">Open Material</a>
+      <p><strong>Material:</strong> <a href="<?= htmlspecialchars($training['material_link']) ?>" target="_blank" class="button">📁 Open Material</a></p>
     <?php else: ?>
-      <p>No material provided yet.</p>
+      <p><strong>Material:</strong> No material uploaded by HR.</p>
     <?php endif; ?>
   </div>
 
   <?php if ($role === 'trainer'): ?>
     <div class="content">
-      <h3>📝 Add Module/Material</h3>
-      <form method="POST" action="add_material.php" enctype="multipart/form-data">
+      <h3>➕ Add Classroom Material</h3>
+      <form method="POST" action="trainer/add_material.php" enctype="multipart/form-data">
         <input type="hidden" name="training_id" value="<?= $training_id ?>">
         <label>Module Title:</label>
         <input type="text" name="module_title" required>
@@ -114,42 +126,44 @@ if (!$hasAccess) {
         <label>Upload File (PDF/Video):</label>
         <input type="file" name="material_file">
 
-        <label>or Provide Link:</label>
+        <label>or Provide External Link:</label>
         <input type="url" name="material_link" placeholder="https://...">
 
-        <button class="button" type="submit">➕ Add Content</button>
+        <button class="button" type="submit">Upload Material</button>
       </form>
     </div>
   <?php endif; ?>
 
   <div class="content">
-    <h3>📘 Classroom Content</h3>
+    <h3>📚 Classroom Content</h3>
     <?php
-    $m = $conn->prepare("SELECT * FROM classroom_materials WHERE training_id = ?");
-    $m->bind_param("i", $training_id);
-    $m->execute();
-    $materials = $m->get_result();
+    $materialStmt = $conn->prepare("SELECT * FROM classroom_materials WHERE training_id = ?");
+    $materialStmt->bind_param("i", $training_id);
+    $materialStmt->execute();
+    $materials = $materialStmt->get_result();
 
-    if ($materials->num_rows > 0) {
-      while ($mod = $materials->fetch_assoc()) {
-        echo "<div class='module'>";
-        echo "<h4>" . htmlspecialchars($mod['module_title']) . "</h4>";
-        echo "<p>" . nl2br(htmlspecialchars($mod['module_description'])) . "</p>";
-        if (!empty($mod['material_link'])) {
-          echo "<p><a href='" . htmlspecialchars($mod['material_link']) . "' target='_blank'>🔗 Open Link</a></p>";
-        } elseif (!empty($mod['material_file'])) {
-          echo "<p><a href='" . htmlspecialchars($mod['material_file']) . "' target='_blank'>📁 Download File</a></p>";
-        }
-        echo "</div>";
-      }
-    } else {
-      echo "<p>No classroom content uploaded yet.</p>";
-    }
-    $m->close();
+    if ($materials->num_rows > 0):
+      while ($mat = $materials->fetch_assoc()):
+    ?>
+        <div class="module">
+          <h4><?= htmlspecialchars($mat['module_title']) ?></h4>
+          <p><?= nl2br(htmlspecialchars($mat['module_description'])) ?></p>
+          <?php if (!empty($mat['material_link'])): ?>
+            <p><a href="<?= htmlspecialchars($mat['material_link']) ?>" target="_blank" class="button">🔗 Open Link</a></p>
+          <?php elseif (!empty($mat['material_file'])): ?>
+            <p><a href="<?= htmlspecialchars($mat['material_file']) ?>" target="_blank" class="button">📁 Download File</a></p>
+          <?php else: ?>
+            <p>No material attached.</p>
+          <?php endif; ?>
+        </div>
+    <?php endwhile; else: ?>
+      <p>No modules uploaded yet.</p>
+    <?php endif;
+    $materialStmt->close();
     ?>
   </div>
 
-  <a class="button" href="view_trainings.php">⬅ Back to Trainings</a>
+  <a class="button" href="dashboard.php">⬅ Back to Dashboard</a>
 </div>
 
 </body>
