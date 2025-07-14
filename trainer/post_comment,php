@@ -1,0 +1,32 @@
+<?php
+session_start();
+include '../config.php';
+
+if (!isset($_SESSION['email'])) {
+  header("Location: ../index.html");
+  exit();
+}
+
+$userId = $_SESSION['user_id'];
+$role = $_SESSION['role'];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  $training_id = $_POST['training_id'] ?? null;
+  $module_id = $_POST['module_id'] ?? null;
+  $comment_text = trim($_POST['comment_text'] ?? '');
+
+  if ($training_id && $module_id && !empty($comment_text)) {
+    $stmt = $conn->prepare("INSERT INTO module_comments (module_id, training_id, user_id, comment_text, created_at) VALUES (?, ?, ?, ?, NOW())");
+    $stmt->bind_param("iiis", $module_id, $training_id, $userId, $comment_text);
+    $stmt->execute();
+    $stmt->close();
+
+    $_SESSION['success'] = "✅ Comment posted successfully.";
+  } else {
+    $_SESSION['error'] = "❌ Invalid comment submission.";
+  }
+
+  header("Location: ../classroom.php?training_id=$training_id");
+  exit();
+}
+?>
