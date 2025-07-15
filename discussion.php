@@ -11,15 +11,15 @@ $userId = $_SESSION['user_id'];
 $fullname = $_SESSION['fullname'];
 $role = $_SESSION['role'];
 
-$module_id = $_GET['module_id'] ?? null;
-$training_id = $_GET['training_id'] ?? null;
+$module_id = isset($_GET['module_id']) ? (int)$_GET['module_id'] : null;
+$training_id = isset($_GET['training_id']) ? (int)$_GET['training_id'] : null;
 
 if (!$module_id || !$training_id) {
-    die("Invalid access.");
+    die("❌ Invalid access: missing module or training ID.");
 }
 
-// Handle new comment
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['comment'])) {
+// Handle new comment post
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty(trim($_POST['comment']))) {
     $comment = trim($_POST['comment']);
     $stmt = $conn->prepare("INSERT INTO comments (training_id, module_id, user_id, comment) VALUES (?, ?, ?, ?)");
     $stmt->bind_param("iiis", $training_id, $module_id, $userId, $comment);
@@ -29,19 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['comment'])) {
     exit();
 }
 
-// Fetch module info
+// Fetch module title
 $modStmt = $conn->prepare("SELECT module_title FROM classroom_materials WHERE id = ?");
 $modStmt->bind_param("i", $module_id);
 $modStmt->execute();
-$modTitle = $modStmt->get_result()->fetch_assoc()['module_title'] ?? 'Module';
+$modResult = $modStmt->get_result();
+$modTitle = $modResult->fetch_assoc()['module_title'] ?? 'Module';
 $modStmt->close();
 
 // Fetch comments
 $cstmt = $conn->prepare("
-  SELECT c.*, u.fullname FROM comments c
-  JOIN users u ON c.user_id = u.id
-  WHERE c.module_id = ?
-  ORDER BY c.created_at ASC
+    SELECT c.*, u.fullname 
+    FROM comments c 
+    JOIN users u ON c.user_id = u.id 
+    WHERE c.module_id = ? 
+    ORDER BY c.created_at ASC
 ");
 $cstmt->bind_param("i", $module_id);
 $cstmt->execute();
@@ -60,10 +62,12 @@ $comments = $cstmt->get_result();
     h2 { color: #003366; margin-bottom: 20px; }
     .comment-box { border-bottom: 1px solid #ddd; padding: 10px 0; }
     .comment-box strong { color: #0055aa; }
-    .meta { font-size: 12px; color: gray; }
-    form textarea { width: 100%; height: 100px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    .meta { font-size: 12px; color: gray; margin-bottom: 5px; }
+    form textarea { width: 100%; height: 100px; margin-top: 10px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; resize: vertical; }
     button { background: #00793a; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-top: 10px; cursor: pointer; }
-    a.back-btn { display: inline-block; margin-top: 20px; color: #003366; text-decoration: none; }
+    button:hover { background: #005f2f; }
+    a.back-btn { display: inline-block; margin-top: 25px; color: #003366; text-decoration: none; font-weight: bold; }
+    a.back-btn:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -88,7 +92,7 @@ $comments = $cstmt->get_result();
       </div>
     <?php endwhile; ?>
   <?php else: ?>
-    <p>No comments yet. Start the discussion!</p>
+    <p>No comments yet. Be the first to start the discussion!</p>
   <?php endif; ?>
 
   <a class="back-btn" href="classroom.php?training_id=<?= $training_id ?>">⬅ Back to Classroom</a>

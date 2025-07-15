@@ -19,13 +19,23 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
   $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
 
-// Default counts
-$pending = $scheduled = $reports = 0;
-
-// HR and employee stats
-if (in_array($role, ['hr', 'dept-head', 'staff','trainer'])) {
+if (in_array($role, ['hr', 'dept-head', 'staff', 'trainer'])) {
   $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
-  $scheduled = $conn->query("SELECT COUNT(*) FROM trainings WHERE WEEK(training_date) = WEEK(CURDATE())")->fetch_row()[0] ?? 0;
+
+  // Filter scheduled trainings this week for the user's department
+  $stmt = $conn->prepare("
+    SELECT COUNT(DISTINCT t.id)
+    FROM trainings t
+    JOIN training_assignments ta ON t.id = ta.training_id
+    JOIN departments d ON ta.department_id = d.id
+    WHERE WEEK(t.training_date) = WEEK(CURDATE()) AND d.name = ?
+  ");
+  $stmt->bind_param("s", $department);
+  $stmt->execute();
+  $stmt->bind_result($scheduled);
+  $stmt->fetch();
+  $stmt->close();
+
   $reports = $conn->query("SELECT COUNT(*) FROM reports")->fetch_row()[0] ?? 0;
 }
 
@@ -90,12 +100,12 @@ if ($role === 'trainer') {
         <a href="schedule_training.php">🗓️ Schedule Training</a>
       <?php endif; ?>
 
-      <?php if ($role === 'employee'): ?>
+      <?php if ($role !== 'trainer'): ?>
         <a href="my_progress.php">📈 My Progress</a>
       <?php endif; ?>
 
       <?php if ($role === 'trainer'): ?>
-        <a href="trainer/add_material.php?training_id=...">Add Material</a> My Classrooms</a>
+        <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
       <?php endif; ?>
 
      
@@ -123,7 +133,7 @@ if ($role === 'trainer') {
         </a>
       <?php endif; ?>
 
-      <?php if ($role === 'employee'): ?>
+      <?php if ($role !== 'trainer'): ?>
         <a class="card" href="my_progress.php">
           <h3>📈 My Progress</h3>
           <p>Track your enrolled trainings</p>
@@ -153,21 +163,22 @@ if ($role === 'trainer') {
       <?php endif; ?>
 
       <?php if ($role === 'trainer'): ?>
-  <div class="card">
-    <h3>🎓 Assigned Trainings</h3>
-    <?php if (!empty($trainerTrainings)): ?>
-      <?php foreach ($trainerTrainings as $t): ?>
-        <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
-          <strong><?= htmlspecialchars($t['title']) ?></strong><br>
-          <small><?= date('M d, Y H:i', strtotime($t['training_date'])) ?></small><br>
-          <a class="btn" href="classroom.php?training_id=<?= $t['id'] ?>">👨‍🏫 Go to Classroom</a>
-          <a class="btn" href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
-        </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <p>No trainings assigned.</p>
-    <?php endif; ?>
-  </div>
+<div class="card" style="padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; width: 100%; box-sizing: border-box;">
+  <h3>🎓 Assigned Trainings</h3>
+  <?php if (!empty($trainerTrainings)): ?>
+    <?php foreach ($trainerTrainings as $t): ?>
+      <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ccc;">
+        <strong><?= htmlspecialchars($t['title']) ?></strong><br>
+        <small><?= date('M d, Y H:i', strtotime($t['training_date'])) ?></small><br>
+        <a href="classroom.php?training_id=<?= $t['id'] ?>" style="display: inline-block; margin-top: 6px; padding: 8px 14px; background: #003366; color: white; border-radius: 4px; text-decoration: none;">👨‍🏫 Go to Classroom</a>
+        <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>" style="display: inline-block; margin-top: 6px; padding: 8px 14px; background: #00793a; color: white; border-radius: 4px; text-decoration: none;">➕ Add Material</a>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p>No trainings assigned.</p>
+  <?php endif; ?>
+</div>
+
 <?php endif; ?>
 
       <?php if ($role === 'hr'): ?>

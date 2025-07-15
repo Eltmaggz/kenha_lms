@@ -29,12 +29,11 @@ if (!$training) {
     exit();
 }
 
-// Check access
+// Access control
 $today = date('Y-m-d');
 $trainingDate = date('Y-m-d', strtotime($training['training_date']));
 $hasAccess = false;
 
-// Trainer access check
 if ($role === 'trainer') {
     $trainerCheck = $conn->prepare("SELECT * FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
     $trainerCheck->bind_param("ii", $userId, $training_id);
@@ -42,9 +41,7 @@ if ($role === 'trainer') {
     $trainerRes = $trainerCheck->get_result();
     $hasAccess = $trainerRes->num_rows > 0;
     $trainerCheck->close();
-}
-// Employee access check
-elseif ($role !== 'trainer') {
+} elseif ($role !== 'trainer') {
     $enrollCheck = $conn->prepare("SELECT * FROM enrollments WHERE user_id = ? AND training_id = ?");
     $enrollCheck->bind_param("ii", $userId, $training_id);
     $enrollCheck->execute();
@@ -154,10 +151,12 @@ if (!$hasAccess) {
 
     if ($materials->num_rows > 0):
       while ($mat = $materials->fetch_assoc()):
+        $modTitle = $mat['module_title'] ?? 'Untitled Module';
+        $modDesc = $mat['module_description'] ?? 'No description available.';
     ?>
         <div class="module">
-          <h4><?= htmlspecialchars($mat['module_title']) ?></h4>
-          <p><?= nl2br(htmlspecialchars($mat['module_description'])) ?></p>
+          <h4><?= htmlspecialchars($modTitle) ?></h4>
+          <p><?= nl2br(htmlspecialchars($modDesc)) ?></p>
           <?php if (!empty($mat['material_link'])): ?>
             <p><a href="<?= htmlspecialchars($mat['material_link']) ?>" target="_blank" class="button">🔗 Open Link</a></p>
           <?php elseif (!empty($mat['material_file'])): ?>

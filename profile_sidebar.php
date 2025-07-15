@@ -51,7 +51,7 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
       <a href="schedule_training.php">🗓️ Schedule Training</a>
       <a href="reports.php">📊 Reports</a>
 
-    <?php elseif ($role === 'employee'): ?>
+    <?php elseif ($role !== 'trainer'): ?>
       <a href="my_progress.php">📈 My Progress</a>
     <?php endif; ?>
   </div>

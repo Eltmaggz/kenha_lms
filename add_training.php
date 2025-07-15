@@ -112,16 +112,47 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
   <p><?= htmlspecialchars($email) ?></p>
   <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-  <div class="nav">
-    <a href="dashboard.php">🏠 Dashboard</a>
-    <a href="view_trainings.php">📚 View Trainings</a>
-    <a href="add_training.php">➕ Add Training</a>
-    <a href="view_my_trainings.php">👤 My Trainings</a>
-    <a href="approve_requests.php">✅ Approve Requests</a>
-    <a href="reports.php">📊 Reports</a>
+    <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
+      <label for="profilePic" class="upload-label">📸 Upload Photo</label>
+      <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
+    </form>
+    <form method="POST" action="remove_photo.php">
+      <button type="submit" class="remove-btn">❌ Remove Photo</button>
+    </form>
+
+    <div class="nav">
+      <a href="dashboard.php">🏠 Dashboard</a>
+      <?php if ($role !== 'trainer'): ?>
+        <a href="view_trainings.php">📚 View Trainings</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'hr'): ?>
+        <a href="add_training.php">➕ Add Training</a>
+        <a href="view_my_trainings.php">👤 My Trainings</a>
+        <a href="approve_requests.php">✅ Approve Requests</a>
+        <?php if ($role === 'hr'): ?>
+  <a href="reports.php">📊 Reports</a>
+<?php endif; ?>
+
+      <?php endif; ?>
+
+      <?php if ($role === 'dept-head'): ?>
+        <a href="schedule_training.php">🗓️ Schedule Training</a>
+      <?php endif; ?>
+
+      <?php if ($role !== 'trainer'): ?>
+        <a href="my_progress.php">📈 My Progress</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'trainer'): ?>
+        <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
+      <?php endif; ?>
+
+     
+    </div>
+
     <a href="logout.php" class="logout">🚪 Logout</a>
   </div>
-</div>
 
 
 <div class="main-content">
