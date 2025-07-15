@@ -80,7 +80,10 @@ if ($role === 'trainer') {
         <a href="add_training.php">➕ Add Training</a>
         <a href="view_my_trainings.php">👤 My Trainings</a>
         <a href="approve_requests.php">✅ Approve Requests</a>
-         <a href="reports.php">📊 Reports</a>
+        <?php if ($role === 'hr'): ?>
+  <a href="reports.php">📊 Reports</a>
+<?php endif; ?>
+
       <?php endif; ?>
 
       <?php if ($role === 'dept-head'): ?>
@@ -167,10 +170,13 @@ if ($role === 'trainer') {
   </div>
 <?php endif; ?>
 
-      <a class="card" href="reports.php">
-        <h3>📊 Reports</h3>
-        <p><?= $reports ?> reports submitted</p>
-      </a>
+      <?php if ($role === 'hr'): ?>
+  <a class="card" href="reports.php">
+    <h3>📊 Reports</h3>
+    <p><?= $reports ?> reports submitted</p>
+  </a>
+<?php endif; ?>
+
     </div>
   </div>
 </div>
