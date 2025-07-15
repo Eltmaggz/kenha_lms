@@ -21,6 +21,7 @@ $profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
 if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
     $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
+
 $sql = "
   SELECT DISTINCT t.*
   FROM trainings t
@@ -33,7 +34,6 @@ $sql = "
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("sss", $userDept, $searchParam, $searchParam);
-
 $stmt->execute();
 $result = $stmt->get_result();
 ?>
@@ -61,13 +61,23 @@ $result = $stmt->get_result();
     <div class="nav">
       <a href="dashboard.php">🏠 Dashboard</a>
       <a href="view_trainings.php">📚 View Trainings</a>
-      <a href="add_training.php">➕ Add Training</a>
-      <a href="my_progress.php">📈 My Progress</a>
-      <a href="reports.php">📊 Reports</a>
-      <a href="schedule_training.php">🗓️ Schedule Training</a>
-      <a href="view_my_trainings.php">👤 My Trainings</a>
-      <a href="approve_requests.php">✅ Approve Requests</a>
+
+      <?php if ($role === 'hr'): ?>
+        <a href="add_training.php">➕ Add Training</a>
+        <a href="view_my_trainings.php">👤 My Trainings</a>
+        <a href="approve_requests.php">✅ Approve Requests</a>
+        <a href="reports.php">📊 Reports</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'dept-head'): ?>
+        <a href="schedule_training.php">🗓 Schedule Training</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'employee'): ?>
+        <a href="my_progress.php">📈 My Progress</a>
+      <?php endif; ?>
     </div>
+
     <a href="logout.php" class="logout">🚪 Logout</a>
   </div>
 
@@ -82,6 +92,7 @@ $result = $stmt->get_result();
     </div>
 
     <h2>📚 Available Trainings for <?= htmlspecialchars($userDept) ?> / <?= htmlspecialchars($userRegion) ?></h2>
+
     <form method="GET" class="search-form">
       <input type="text" name="search" placeholder="Search by title or date..." value="<?= htmlspecialchars($search) ?>">
     </form>
