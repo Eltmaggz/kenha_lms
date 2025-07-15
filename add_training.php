@@ -105,6 +105,7 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
   </script>
 </head>
 <body>
+<!-- SIDEBAR -->
 <div class="sidebar">
   <img src="<?= $profilePhoto ?>" alt="Profile Photo">
   <h3><?= htmlspecialchars($fullname) ?></h3>
@@ -115,14 +116,13 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
     <a href="dashboard.php">🏠 Dashboard</a>
     <a href="view_trainings.php">📚 View Trainings</a>
     <a href="add_training.php">➕ Add Training</a>
-    <a href="my_progress.php">📈 My Progress</a>
-    <a href="reports.php">📊 Reports</a>
-    <a href="schedule_training.php">🗓 Schedule Training</a>
     <a href="view_my_trainings.php">👤 My Trainings</a>
     <a href="approve_requests.php">✅ Approve Requests</a>
+    <a href="reports.php">📊 Reports</a>
     <a href="logout.php" class="logout">🚪 Logout</a>
   </div>
 </div>
+
 
 <div class="main-content">
   <h2>➕ Add New Training</h2>
