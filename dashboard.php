@@ -80,6 +80,7 @@ if ($role === 'trainer') {
         <a href="add_training.php">➕ Add Training</a>
         <a href="view_my_trainings.php">👤 My Trainings</a>
         <a href="approve_requests.php">✅ Approve Requests</a>
+         <a href="reports.php">📊 Reports</a>
       <?php endif; ?>
 
       <?php if ($role === 'dept-head'): ?>
@@ -94,7 +95,7 @@ if ($role === 'trainer') {
         <a href="trainer/add_material.php?training_id=...">Add Material</a> My Classrooms</a>
       <?php endif; ?>
 
-      <a href="reports.php">📊 Reports</a>
+     
     </div>
 
     <a href="logout.php" class="logout">🚪 Logout</a>
