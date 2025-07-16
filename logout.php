@@ -1,10 +1,20 @@
 <?php
 session_start();
+include 'config.php';
+
+// Clear session_token in DB if user is logged in
+if (isset($_SESSION['user_id'])) {
+    $userId = $_SESSION['user_id'];
+    $stmt = $conn->prepare("UPDATE users SET session_token = NULL WHERE id = ?");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $stmt->close();
+}
 
 // Unset all session variables
 $_SESSION = array();
 
-// If session uses cookies, delete the session cookie
+// Delete session cookie if applicable
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(
@@ -14,10 +24,10 @@ if (ini_get("session.use_cookies")) {
     );
 }
 
-// Finally, destroy the session
+// Destroy the session
 session_destroy();
 
-// Redirect to login page
+// Redirect to login
 header("Location: index.html");
 exit();
 ?>
