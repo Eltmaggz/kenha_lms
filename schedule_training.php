@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <head>
   <meta charset="UTF-8">
   <title>Schedule Training</title>
-  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <?php include 'profile_sidebar.php'; ?>
