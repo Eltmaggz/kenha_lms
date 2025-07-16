@@ -129,7 +129,7 @@ $result = $stmt->get_result();
           <p><strong>Time:</strong> <?= htmlspecialchars($row['time_of_delivery']) ?></p>
           <p><strong>Mode:</strong> <?= htmlspecialchars($row['mode_of_delivery']) ?></p>
           <p><strong>Assessment:</strong> <?= htmlspecialchars($row['assessment_type']) ?></p>
-          <p><strong>Material:</strong> <a href="<?= htmlspecialchars($row['material_link']) ?>" target="_blank">View</a></p>
+    
 
           <?php if ($enrolled): ?>
             <span class="badge" style="background: green;">✅ Enrolled</span><br>
