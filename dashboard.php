@@ -93,7 +93,6 @@ if ($role === 'trainer') {
         <?php if ($role === 'hr'): ?>
   <a href="reports.php">📊 Reports</a>
 <?php endif; ?>
-
       <?php endif; ?>
 
       <?php if ($role === 'dept-head'): ?>
