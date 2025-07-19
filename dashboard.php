@@ -188,6 +188,57 @@ if ($role === 'trainer') {
 <?php endif; ?>
 
     </div>
+    <?php if ($role !== 'trainer'): ?>
+  <div class="progress-section" style="margin-top: 40px;">
+    <h3 style="color: #003366;">📈 My Training Progress</h3>
+    <?php
+      $stmt = $conn->prepare("
+        SELECT t.title, t.training_date,
+               CASE 
+                 WHEN e.completed = 1 THEN 'Completed'
+                 WHEN e.progress > 0 THEN 'Ongoing'
+                 ELSE 'Pending'
+               END AS status
+        FROM trainings t
+        JOIN enrollments e ON t.id = e.training_id
+        WHERE e.user_id = ?
+        ORDER BY t.training_date DESC
+      ");
+      $stmt->bind_param("i", $userId);
+      $stmt->execute();
+      $progressResult = $stmt->get_result();
+
+      if ($progressResult->num_rows > 0):
+    ?>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+        <thead>
+          <tr style="background-color: #f0f0f0;">
+            <th style="text-align: left; padding: 8px;">Title</th>
+            <th style="text-align: left; padding: 8px;">Date</th>
+            <th style="text-align: left; padding: 8px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php while ($row = $progressResult->fetch_assoc()): ?>
+            <tr>
+              <td style="padding: 8px;"><?= htmlspecialchars($row['title']) ?></td>
+              <td style="padding: 8px;"><?= date('M d, Y', strtotime($row['training_date'])) ?></td>
+              <td style="padding: 8px; color: 
+                <?= $row['status'] === 'Completed' ? 'green' : ($row['status'] === 'Ongoing' ? '#e69500' : 'red') ?>">
+                <?= htmlspecialchars($row['status']) ?>
+              </td>
+            </tr>
+          <?php endwhile; ?>
+        </tbody>
+      </table>
+    <?php else: ?>
+      <p style="margin-top: 10px;">No training enrolled yet.</p>
+    <?php endif;
+      $stmt->close();
+    ?>
+  </div>
+<?php endif; ?>
+
   </div>
 </div>
 </body>

@@ -423,3 +423,14 @@ h2 {
   width: 100%;
   overflow: hidden;
 }
+.progress-section h3 {
+  margin-bottom: 10px;
+}
+
+.progress-section table {
+  border: 1px solid #ccc;
+}
+
+.progress-section th, .progress-section td {
+  border-bottom: 1px solid #ddd;
+}
