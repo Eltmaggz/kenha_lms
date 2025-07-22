@@ -102,7 +102,7 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
 
       <?php if ($role === 'hr'): ?>
         <a href="add_training.php">➕ Add Training</a>
-        <a href="view_my_trainings.php">👤 Added Trainings</a>
+        <a href="view_my_trainings.php">👤My Trainings</a>
         <a href="approve_requests.php">✅ Approve Requests</a>
         <?php if ($role === 'hr'): ?>
   <a href="reports.php">📊 Reports</a>
