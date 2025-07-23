@@ -48,7 +48,7 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
       <a href="approve_requests.php">✅ Approve Requests</a>
 
     <?php elseif ($role === 'DEPT-HEAD'): ?>
-      <a href="schedule_training.php">🗓️ Schedule Training</a>
+     <a href="schedule_training.php">📬 Request Training</a>
       <a href="reports.php">📊 Reports</a>
 
     <?php elseif ($role !== 'TRAINER'): ?>

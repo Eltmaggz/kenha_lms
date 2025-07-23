@@ -6,104 +6,158 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'DEPT-HEAD') {
 }
 include 'config.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  $title = $_POST['title'];
-  $date = $_POST['date'];
-  $description = $_POST['description'];
-  $department = $_SESSION['department'];
-  $region = $_SESSION['region'];
+// Session Data
+$fullname = $_SESSION['fullname'];
+$role = $_SESSION['role'];
+$email = $_SESSION['email'];
+$department = $_SESSION['department'];
+$region = $_SESSION['region'];
+$userId = $_SESSION['user_id'];
 
-  $stmt = $conn->prepare("INSERT INTO scheduled_trainings (title, date, description, department, region) VALUES (?, ?, ?, ?, ?)");
-  $stmt->bind_param("sssss", $title, $date, $description, $department, $region);
-  $stmt->execute();
+$profilePhoto = (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo']))
+  ? 'uploads/' . $_SESSION['profile_photo']
+  : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
+$message = "";
+$isError = false;
+
+// Handle form submission
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $title = trim($_POST['title']);
+  $description = trim($_POST['description']);
+  $preferred_date = $_POST['preferred_date'];
+  $mode = $_POST['mode_of_delivery'];
+  $assessment = $_POST['assessment_type'];
+  $suggested_trainer = trim($_POST['suggested_trainer']);
+
+  // Get department_id
+  $depQuery = $conn->prepare("SELECT id FROM departments WHERE name = ?");
+  $depQuery->bind_param("s", $department);
+  $depQuery->execute();
+  $depQuery->bind_result($department_id);
+  $depQuery->fetch();
+  $depQuery->close();
+
+  // Get region_id
+  $regQuery = $conn->prepare("SELECT id FROM regions WHERE name = ?");
+  $regQuery->bind_param("s", $region);
+  $regQuery->execute();
+  $regQuery->bind_result($region_id);
+  $regQuery->fetch();
+  $regQuery->close();
+
+  // Insert request
+  $stmt = $conn->prepare("
+    INSERT INTO training_requests (
+      title, description, preferred_date, mode_of_delivery, assessment_type,
+      department_id, region_id, requested_by, suggested_trainer
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  ");
+  $stmt->bind_param(
+    "ssssssiis",
+    $title,
+    $description,
+    $preferred_date,
+    $mode,
+    $assessment,
+    $department_id,
+    $region_id,
+    $userId,
+    $suggested_trainer
+  );
+
+  if ($stmt->execute()) {
+    $message = "✅ Training request sent to HR for approval.";
+  } else {
+    $message = "❌ Failed to submit request: " . $stmt->error;
+    $isError = true;
+  }
+
   $stmt->close();
-  $message = "✅ Training scheduled successfully.";
 }
 ?>
-<?php
-$fullname = $_SESSION['fullname'] ?? 'User';
-$role = $_SESSION['role'] ?? 'employee';
-$email = $_SESSION['email'] ?? '';
-$department = $_SESSION['department'] ?? 'N/A';
-$region = $_SESSION['region'] ?? 'N/A';
-
-$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
-    $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Schedule Training</title>
+  <title>Create Training Request</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .form-box label { display: block; margin-top: 10px; font-weight: bold; }
+    .form-box input, .form-box select, .form-box textarea {
+      width: 100%; padding: 10px; margin-top: 4px; margin-bottom: 12px;
+      border: 1px solid #ccc; border-radius: 5px;
+    }
+    .success-msg { color: green; font-weight: bold; margin: 10px 0; }
+    .error-msg { color: red; font-weight: bold; margin: 10px 0; }
+  </style>
 </head>
 <body>
-    <!-- SIDEBAR -->
-  <div class="sidebar">
-    <img src="<?= $profilePhoto ?>" alt="Profile Photo">
-    <h3><?= htmlspecialchars($fullname) ?></h3>
-    <p><?= htmlspecialchars($email) ?></p>
-    <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-    <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
-      <label for="profilePic" class="upload-label">📸 Upload Photo</label>
-      <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
-    </form>
-    <form method="POST" action="remove_photo.php">
-      <button type="submit" class="remove-btn">❌ Remove Photo</button>
-    </form>
+<div class="sidebar">
+  <img src="<?= $profilePhoto ?>" alt="Profile Photo">
+  <h3><?= htmlspecialchars($fullname) ?></h3>
+  <p><?= htmlspecialchars($email) ?></p>
+  <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-    <div class="nav">
-      <a href="dashboard.php">🏠 Dashboard</a>
-      <?php if ($role !== 'TRAINER'): ?>
-        <a href="view_trainings.php">📚 View Trainings</a>
-      <?php endif; ?>
+  <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
+    <label class="upload-label" for="profilePic">📸 Upload Photo</label>
+    <input type="file" name="profile_photo" id="profilePic" onchange="this.form.submit()">
+  </form>
+  <form method="POST" action="remove_photo.php">
+    <button class="remove-btn" type="submit">❌ Remove Photo</button>
+  </form>
 
-      <?php if ($role === 'HR'): ?>
-        <a href="add_training.php">➕ Add Training</a>
-        <a href="view_my_trainings.php">👤 My Trainings</a>
-        <a href="approve_requests.php">✅ Approve Requests</a>
-        <?php if ($role === 'HR'): ?>
-  <a href="reports.php">📊 Reports</a>
-<?php endif; ?>
-
-      <?php endif; ?>
-
-      <?php if ($role === 'DEPT-HEAD'): ?>
-        <a href="schedule_training.php">🗓️ Schedule Training</a>
-      <?php endif; ?>
-
-      <?php if ($role !== 'TRAINER'): ?>
-        <a href="my_progress.php">📈 My Progress</a>
-      <?php endif; ?>
-
-      <?php if ($role === 'TRAINER'): ?>
-        <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
-      <?php endif; ?>
-
-     
-    </div>
-
-    <a href="logout.php" class="logout">🚪 Logout</a>
+  <div class="nav">
+    <a href="dashboard.php">🏠 Dashboard</a>
+    <a href="view_trainings.php">📚 View Trainings</a>
+    <a href="schedule_training.php">📬 Request Training</a>
+    <a href="my_progress.php">📈 My Progress</a>
   </div>
+  <a href="logout.php" class="logout">🚪 Logout</a>
+</div>
 
 <div class="main-content">
-  <h2>📅 Schedule Department Training</h2>
-  <?php if (!empty($message)) echo "<p class='success-msg'>$message</p>"; ?>
+  <h2>📬 Create Training Request</h2>
+
+  <?php if (!empty($message)): ?>
+    <p class="<?= $isError ? 'error-msg' : 'success-msg' ?>"><?= htmlspecialchars($message) ?></p>
+  <?php endif; ?>
+
   <form method="POST" class="form-box">
     <label>Training Title</label>
     <input type="text" name="title" required>
 
-    <label>Date</label>
-    <input type="date" name="date" required>
-
     <label>Description</label>
     <textarea name="description" required></textarea>
 
-    <button type="submit">Schedule</button>
+    <label>Preferred Date</label>
+    <input type="date" name="preferred_date" required>
+
+    <label>Mode of Delivery</label>
+    <select name="mode_of_delivery" required>
+      <option value="">--Select--</option>
+      <option value="Instructor-Led Training (ILT)">Instructor-Led Training (ILT)</option>
+      <option value="Virtual Instructor-Led Training (VILT)">Virtual Instructor-Led Training (VILT)</option>
+      <option value="E-Learning (Self-Paced)">E-Learning (Self-Paced)</option>
+      <option value="Blended Learning">Blended Learning</option>
+      <option value="On-the-Job Training (OJT)">On-the-Job Training (OJT)</option>
+    </select>
+
+    <label>Assessment Type</label>
+    <select name="assessment_type" required>
+      <option value="">--Select--</option>
+      <option value="Quizzes/MCQs">Quizzes/MCQs</option>
+      <option value="Assignments/Projects">Assignments/Projects</option>
+      <option value="Surveys/Feedback">Surveys/Feedback</option>
+      <option value="Self-Assessments">Self-Assessments</option>
+      <option value="Peer Reviews">Peer Reviews</option>
+    </select>
+
+    <label>Suggested Trainer (Optional)</label>
+    <input type="text" name="suggested_trainer" placeholder="Trainer full name or email">
+
+    <button type="submit">📤 Submit Request</button>
   </form>
 </div>
 </body>

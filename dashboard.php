@@ -96,7 +96,7 @@ if ($role === 'trainer') {
       <?php endif; ?>
 
       <?php if ($role === 'DEPT-HEAD'): ?>
-        <a href="schedule_training.php">🗓️ Schedule Training</a>
+        <a href="schedule_training.php">📬 Request Training</a>
       <?php endif; ?>
 
       <?php if ($role !== 'TRAINER'): ?>
@@ -156,7 +156,7 @@ if ($role === 'trainer') {
 
       <?php if ($role === 'DEPT-HEAD'): ?>
         <a class="card" href="schedule_training.php">
-          <h3>🗓️ Schedule Training</h3>
+          <h3>📬 Request Training</h3>
           <p>Request new trainings</p>
         </a>
       <?php endif; ?>
