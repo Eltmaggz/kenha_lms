@@ -19,7 +19,7 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
   $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
 }
 
-if (in_array($role, ['hr', 'dept-head', 'staff', 'trainer'])) {
+if (in_array($role, ['HR', 'DEPT-HEAD', 'STAFF', 'TRAINER'])) {
   $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
 
   // Filter scheduled trainings this week for the user's department
@@ -82,28 +82,28 @@ if ($role === 'trainer') {
 
     <div class="nav">
       <a href="dashboard.php">🏠 Dashboard</a>
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a href="view_trainings.php">📚 View Trainings</a>
       <?php endif; ?>
 
-      <?php if ($role === 'hr'): ?>
+      <?php if ($role === 'HR'): ?>
         <a href="add_training.php">➕ Add Training</a>
         <a href="view_my_trainings.php">👤 My Trainings</a>
         <a href="approve_requests.php">✅ Approve Requests</a>
-        <?php if ($role === 'hr'): ?>
+        <?php if ($role === 'HR'): ?>
   <a href="reports.php">📊 Reports</a>
 <?php endif; ?>
       <?php endif; ?>
 
-      <?php if ($role === 'dept-head'): ?>
+      <?php if ($role === 'DEPT-HEAD'): ?>
         <a href="schedule_training.php">🗓️ Schedule Training</a>
       <?php endif; ?>
 
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a href="my_progress.php">📈 My Progress</a>
       <?php endif; ?>
 
-      <?php if ($role === 'trainer'): ?>
+      <?php if ($role === 'TRAINER'): ?>
         <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
       <?php endif; ?>
 
@@ -125,21 +125,21 @@ if ($role === 'trainer') {
     </div>
 
     <div class="cards">
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a class="card" href="view_trainings.php">
           <h3>📚 View Trainings</h3>
           <p><?= $scheduled ?> trainings scheduled this week</p>
         </a>
       <?php endif; ?>
 
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a class="card" href="my_progress.php">
           <h3>📈 My Progress</h3>
           <p>Track your enrolled trainings</p>
         </a>
       <?php endif; ?>
 
-      <?php if ($role === 'hr'): ?>
+      <?php if ($role === 'HR'): ?>
         <a class="card" href="add_training.php">
           <h3>➕ Add Training</h3>
           <p>Create new training sessions</p>
@@ -154,14 +154,14 @@ if ($role === 'trainer') {
         </a>
       <?php endif; ?>
 
-      <?php if ($role === 'dept-head'): ?>
+      <?php if ($role === 'DEPT-HEAD'): ?>
         <a class="card" href="schedule_training.php">
           <h3>🗓️ Schedule Training</h3>
           <p>Request new trainings</p>
         </a>
       <?php endif; ?>
 
-      <?php if ($role === 'trainer'): ?>
+      <?php if ($role === 'TRAINER'): ?>
 <div class="card" style="padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; width: 100%; box-sizing: border-box;">
   <h3>🎓 Assigned Trainings</h3>
   <?php if (!empty($trainerTrainings)): ?>
@@ -180,7 +180,7 @@ if ($role === 'trainer') {
 
 <?php endif; ?>
 
-      <?php if ($role === 'hr'): ?>
+      <?php if ($role === 'HR'): ?>
   <a class="card" href="reports.php">
     <h3>📊 Reports</h3>
     <p><?= $reports ?> reports submitted</p>
@@ -188,7 +188,7 @@ if ($role === 'trainer') {
 <?php endif; ?>
 
     </div>
-    <?php if ($role !== 'trainer'): ?>
+    <?php if ($role !== 'TRAINER'): ?>
   <div class="progress-section" style="margin-top: 40px;">
     <h3 style="color: #003366;">📈 My Training Progress</h3>
     <?php

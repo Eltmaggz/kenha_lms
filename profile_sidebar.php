@@ -41,17 +41,17 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
     <a href="dashboard.php">🏠 Dashboard</a>
     <a href="view_trainings.php">📚 View Trainings</a>
 
-    <?php if ($role === 'hr'): ?>
+    <?php if ($role === 'HR'): ?>
       <a href="add_training.php">➕ Add Training</a>
       <a href="view_my_trainings.php">👤 My Trainings</a>
       <a href="reports.php">📊 Reports</a>
       <a href="approve_requests.php">✅ Approve Requests</a>
 
-    <?php elseif ($role === 'hod'): ?>
+    <?php elseif ($role === 'DEPT-HEAD'): ?>
       <a href="schedule_training.php">🗓️ Schedule Training</a>
       <a href="reports.php">📊 Reports</a>
 
-    <?php elseif ($role !== 'trainer'): ?>
+    <?php elseif ($role !== 'TRAINER'): ?>
       <a href="my_progress.php">📈 My Progress</a>
     <?php endif; ?>
   </div>

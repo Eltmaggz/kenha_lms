@@ -63,16 +63,16 @@ $result = $stmt->get_result();
   <div class="nav">
     <a href="dashboard.php">🏠 Dashboard</a>
     <a href="view_trainings.php">📚 View Trainings</a>
-    <?php if ($role === 'hr'): ?>
+    <?php if ($role === 'HR'): ?>
       <a href="add_training.php">➕ Add Training</a>
       <a href="view_my_trainings.php">👤 My Trainings</a>
       <a href="approve_requests.php">✅ Approve Requests</a>
       <a href="reports.php">📊 Reports</a>
     <?php endif; ?>
-    <?php if ($role === 'dept-head'): ?>
+    <?php if ($role === 'DEPT-HEAD'): ?>
       <a href="schedule_training.php">🗓️ Schedule Training</a>
     <?php endif; ?>
-    <?php if ($role !== 'trainer'): ?>
+    <?php if ($role !== 'TRAINER'): ?>
       <a href="my_progress.php">📈 My Progress</a>
     <?php endif; ?>
   </div>

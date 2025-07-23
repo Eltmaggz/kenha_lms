@@ -34,14 +34,14 @@ $today = date('Y-m-d');
 $trainingDate = date('Y-m-d', strtotime($training['training_date']));
 $hasAccess = false;
 
-if ($role === 'trainer') {
+if ($role === 'TRAINER') {
     $trainerCheck = $conn->prepare("SELECT * FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
     $trainerCheck->bind_param("ii", $userId, $training_id);
     $trainerCheck->execute();
     $trainerRes = $trainerCheck->get_result();
     $hasAccess = $trainerRes->num_rows > 0;
     $trainerCheck->close();
-} elseif ($role !== 'trainer') {
+} elseif ($role !== 'TRAINER') {
     $enrollCheck = $conn->prepare("SELECT * FROM enrollments WHERE user_id = ? AND training_id = ?");
     $enrollCheck->bind_param("ii", $userId, $training_id);
     $enrollCheck->execute();
@@ -119,7 +119,7 @@ if (!$hasAccess) {
     <?php endif; ?>
   </div>
 
-  <?php if ($role === 'trainer'): ?>
+  <?php if ($role === 'TRAINER'): ?>
     <div class="content">
       <h3>➕ Add Classroom Material</h3>
       <form method="POST" action="trainer/add_material.php" enctype="multipart/form-data">

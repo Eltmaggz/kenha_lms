@@ -1,6 +1,6 @@
 <?php
 session_start();
-if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'hr') {
+if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'HR') {
     header("Location: index.html");
     exit();
 }
@@ -96,29 +96,29 @@ if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['pr
 
     <div class="nav">
       <a href="dashboard.php">🏠 Dashboard</a>
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a href="view_trainings.php">📚 View Trainings</a>
       <?php endif; ?>
 
-      <?php if ($role === 'hr'): ?>
+      <?php if ($role === 'HR'): ?>
         <a href="add_training.php">➕ Add Training</a>
         <a href="view_my_trainings.php">👤My Trainings</a>
         <a href="approve_requests.php">✅ Approve Requests</a>
-        <?php if ($role === 'hr'): ?>
+        <?php if ($role === 'HR'): ?>
   <a href="reports.php">📊 Reports</a>
 <?php endif; ?>
 
       <?php endif; ?>
 
-      <?php if ($role === 'dept-head'): ?>
+      <?php if ($role === 'DEPT-HEAD'): ?>
         <a href="schedule_training.php">🗓️ Schedule Training</a>
       <?php endif; ?>
 
-      <?php if ($role !== 'trainer'): ?>
+      <?php if ($role !== 'TRAINER'): ?>
         <a href="my_progress.php">📈 My Progress</a>
       <?php endif; ?>
 
-      <?php if ($role === 'trainer'): ?>
+      <?php if ($role === 'TRAINER'): ?>
         <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
       <?php endif; ?>
 
