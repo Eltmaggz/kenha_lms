@@ -5,6 +5,37 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'HR') {
   exit();
 }
 include 'config.php';
+$email = $_SESSION['email'];
+$fullname = $_SESSION['fullname'];
+$role = $_SESSION['role'];
+$department = $_SESSION['department'];
+$region = $_SESSION['region'];
+$userId = $_SESSION['user_id'];
+$profilePhoto = 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+
+if (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . $_SESSION['profile_photo'])) {
+  $profilePhoto = 'uploads/' . $_SESSION['profile_photo'];
+}
+
+if (in_array($role, ['HR', 'DEPT-HEAD', 'STAFF', 'TRAINER'])) {
+  $pending = $conn->query("SELECT COUNT(*) FROM training_requests WHERE status = 'pending'")->fetch_row()[0] ?? 0;
+
+  // Filter scheduled trainings this week for the user's department
+  $stmt = $conn->prepare("
+    SELECT COUNT(DISTINCT t.id)
+    FROM trainings t
+    JOIN training_assignments ta ON t.id = ta.training_id
+    JOIN departments d ON ta.department_id = d.id
+    WHERE WEEK(t.training_date) = WEEK(CURDATE()) AND d.name = ?
+  ");
+  $stmt->bind_param("s", $department);
+  $stmt->execute();
+  $stmt->bind_result($scheduled);
+  $stmt->fetch();
+  $stmt->close();
+
+  $reports = $conn->query("SELECT COUNT(*) FROM reports")->fetch_row()[0] ?? 0;
+}
 
 // Handle approval action
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['approve_id'])) {
@@ -57,8 +88,54 @@ $result = $conn->query($query);
   </style>
 </head>
 <body>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <img src="<?= $profilePhoto ?>" alt="Profile Photo">
+    <h3><?= htmlspecialchars($fullname) ?></h3>
+    <p><?= htmlspecialchars($email) ?></p>
+    <p><?= ucwords($role) ?> | <?= ucwords($department) ?> / <?= ucwords($region) ?></p>
 
-<?php include 'profile_sidebar.php'; ?>
+    <form class="profile-upload" method="POST" action="upload_profile.php" enctype="multipart/form-data">
+      <label for="profilePic" class="upload-label">📸 Upload Photo</label>
+      <input type="file" id="profilePic" name="profile_photo" onchange="this.form.submit()">
+    </form>
+    <form method="POST" action="remove_photo.php">
+      <button type="submit" class="remove-btn">❌ Remove Photo</button>
+    </form>
+
+    <div class="nav">
+      <a href="dashboard.php">🏠 Dashboard</a>
+      <?php if ($role !== 'TRAINER'): ?>
+        <a href="view_trainings.php">📚 View Trainings</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'HR'): ?>
+        <a href="add_training.php">➕ Add Training</a>
+        <a href="view_my_trainings.php">👤 My Trainings</a>
+        <a href="approve_requests.php">✅ Approve Requests</a>
+        <?php if ($role === 'HR'): ?>
+  <a href="reports.php">📊 Reports</a>
+<?php endif; ?>
+      <?php endif; ?>
+
+      <?php if ($role === 'DEPT-HEAD'): ?>
+        <a href="schedule_training.php">📬 Request Training</a>
+      <?php endif; ?>
+
+      <?php if ($role !== 'TRAINER'): ?>
+        <a href="my_progress.php">📈 My Progress</a>
+      <?php endif; ?>
+
+      <?php if ($role === 'TRAINER'): ?>
+        <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
+      <?php endif; ?>
+
+     
+    </div>
+
+    <a href="logout.php" class="logout">🚪 Logout</a>
+  </div>
+
 
 <div class="main-content">
   <h2>✅ Approve Training Requests</h2>
