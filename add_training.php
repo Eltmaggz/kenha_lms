@@ -83,8 +83,9 @@ if ($dept_name) {
 
   $trainerQuery->close();
 }  }
- $message = "✅ Training added successfully and assigned to selected department(s).";
+$message = "✅ Training added successfully and assigned to selected department(s).";
 }
+} // <-- Add this closing brace to match the opening if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // Fetch departments
 $departmentsRes = $conn->query("SELECT id, name FROM departments ORDER BY name ASC");
@@ -154,7 +155,7 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
         <a href="trainer/add_material.php?training_id=<?= $t['id'] ?>">➕ Add Material</a>
       <?php endif; ?>
 
-     
+
     </div>
 
     <a href="logout.php" class="logout">🚪 Logout</a>
@@ -219,3 +220,6 @@ $allDepartments = $departmentsRes->fetch_all(MYSQLI_ASSOC);
 </div>
 </body>
 </html>
+<?php
+// End of file
+?>
