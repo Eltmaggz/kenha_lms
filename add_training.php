@@ -48,11 +48,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $assign->execute();
       $assign->close();
 
-      // Automatically assign trainers for each department
-      $trainerQuery = $conn->prepare("SELECT id FROM users WHERE role = 'trainer' AND department = (SELECT name FROM departments WHERE id = ?)");
-      $trainerQuery->bind_param("i", $dept_id);
-      $trainerQuery->execute();
-      $trainerResult = $trainerQuery->get_result();
+    // Automatically assign trainers for each department
+$trainerQuery = $conn->prepare("SELECT id FROM users WHERE role = 'trainer' AND department = ?");
+$trainerQuery->bind_param("i", $dept_id);
+$trainerQuery->execute();
+$trainerResult = $trainerQuery->get_result();
+
 
       while ($trainer = $trainerResult->fetch_assoc()) {
         $trainer_id = $trainer['id'];
