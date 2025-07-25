@@ -47,38 +47,43 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       $assign->bind_param("ii", $training_id, $dept_id);
       $assign->execute();
       $assign->close();
+// Get department name from ID
+$nameStmt = $conn->prepare("SELECT name FROM departments WHERE id = ?");
+$nameStmt->bind_param("i", $dept_id);
+$nameStmt->execute();
+$nameResult = $nameStmt->get_result();
+$dept_name = $nameResult->fetch_assoc()['name'] ?? null;
+$nameStmt->close();
 
-    // Automatically assign trainers for each department
-$trainerQuery = $conn->prepare("SELECT id FROM users WHERE role = 'trainer' AND department = ?");
-$trainerQuery->bind_param("i", $dept_id);
-$trainerQuery->execute();
-$trainerResult = $trainerQuery->get_result();
+if ($dept_name) {
+  // Find trainers in that department by department name
+  $trainerQuery = $conn->prepare("SELECT id FROM users WHERE role = 'trainer' AND department = ?");
+  $trainerQuery->bind_param("s", $dept_name); // string not int!
+  $trainerQuery->execute();
+  $trainerResult = $trainerQuery->get_result();
 
+  while ($trainer = $trainerResult->fetch_assoc()) {
+    $trainer_id = $trainer['id'];
 
-      while ($trainer = $trainerResult->fetch_assoc()) {
-        $trainer_id = $trainer['id'];
+    // Check if already assigned
+    $checkStmt = $conn->prepare("SELECT id FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
+    $checkStmt->bind_param("ii", $trainer_id, $training_id);
+    $checkStmt->execute();
+    $checkStmt->store_result();
 
-        // Check if already assigned
-        $checkStmt = $conn->prepare("SELECT id FROM trainer_assignments WHERE trainer_id = ? AND training_id = ?");
-        $checkStmt->bind_param("ii", $trainer_id, $training_id);
-        $checkStmt->execute();
-        $checkStmt->store_result();
-
-        if ($checkStmt->num_rows === 0) {
-          $assignTrainer = $conn->prepare("INSERT INTO trainer_assignments (trainer_id, training_id) VALUES (?, ?)");
-          $assignTrainer->bind_param("ii", $trainer_id, $training_id);
-          $assignTrainer->execute();
-          $assignTrainer->close();
-        }
-
-        $checkStmt->close();
-      }
-
-      $trainerQuery->close();
+    if ($checkStmt->num_rows === 0) {
+      $assignTrainer = $conn->prepare("INSERT INTO trainer_assignments (trainer_id, training_id) VALUES (?, ?)");
+      $assignTrainer->bind_param("ii", $trainer_id, $training_id);
+      $assignTrainer->execute();
+      $assignTrainer->close();
     }
+
+    $checkStmt->close();
   }
 
-  $message = "✅ Training added successfully and assigned to selected department(s).";
+  $trainerQuery->close();
+}  }
+ $message = "✅ Training added successfully and assigned to selected department(s).";
 }
 
 // Fetch departments

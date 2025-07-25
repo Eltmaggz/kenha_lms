@@ -41,7 +41,7 @@ if (in_array($role, ['HR', 'DEPT-HEAD', 'STAFF', 'TRAINER'])) {
 
 // Trainer trainings
 $trainerTrainings = [];
-if ($role === 'trainer') {
+if ($role === 'TRAINER') {
   $stmt = $conn->prepare("
     SELECT t.id, t.title, t.description, t.training_date
     FROM trainings t
