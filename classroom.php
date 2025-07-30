@@ -140,37 +140,56 @@ if (!$hasAccess) {
       </form>
     </div>
   <?php endif; ?>
+<div class="content">
+  <h3>📚 Classroom Content</h3>
+  <?php
+  $materialStmt = $conn->prepare("SELECT * FROM classroom_materials WHERE training_id = ?");
+  $materialStmt->bind_param("i", $training_id);
+  $materialStmt->execute();
+  $materials = $materialStmt->get_result();
 
-  <div class="content">
-    <h3>📚 Classroom Content</h3>
-    <?php
-    $materialStmt = $conn->prepare("SELECT * FROM classroom_materials WHERE training_id = ?");
-    $materialStmt->bind_param("i", $training_id);
-    $materialStmt->execute();
-    $materials = $materialStmt->get_result();
+  if ($materials->num_rows > 0):
+    while ($mat = $materials->fetch_assoc()):
+      $modTitle = $mat['module_title'] ?? 'Untitled Module';
+      $modDesc = $mat['module_description'] ?? 'No description available.';
+      $fileUrl = $mat['material_file'] ?? '';
+      $fileExt = strtolower(pathinfo($fileUrl, PATHINFO_EXTENSION));
+      $materialLink = $mat['material_link'] ?? '';
+  ?>
+      <div class="module">
+        <h4><?= htmlspecialchars($modTitle) ?></h4>
+        <p><?= nl2br(htmlspecialchars($modDesc)) ?></p>
 
-    if ($materials->num_rows > 0):
-      while ($mat = $materials->fetch_assoc()):
-        $modTitle = $mat['module_title'] ?? 'Untitled Module';
-        $modDesc = $mat['module_description'] ?? 'No description available.';
-    ?>
-        <div class="module">
-          <h4><?= htmlspecialchars($modTitle) ?></h4>
-          <p><?= nl2br(htmlspecialchars($modDesc)) ?></p>
-          <?php if (!empty($mat['material_link'])): ?>
-            <p><a href="<?= htmlspecialchars($mat['material_link']) ?>" target="_blank" class="button">🔗 Open Link</a></p>
-          <?php elseif (!empty($mat['material_file'])): ?>
-            <p><a href="<?= htmlspecialchars($mat['material_file']) ?>" target="_blank" class="button">📁 Download File</a></p>
+        <!-- Embedded file preview or fallback -->
+        <?php if (!empty($fileUrl)): ?>
+          <?php if (in_array($fileExt, ['mp4', 'webm', 'ogg'])): ?>
+            <video width="100%" height="360" controls>
+              <source src="<?= htmlspecialchars($fileUrl) ?>" type="video/<?= $fileExt ?>">
+              Your browser does not support the video tag.
+            </video>
+          <?php elseif ($fileExt === 'pdf'): ?>
+            <iframe src="<?= htmlspecialchars($fileUrl) ?>" width="100%" height="500px" style="border: none;"></iframe>
+          <?php else: ?>
+            <a href="<?= htmlspecialchars($fileUrl) ?>" target="_blank" class="button">📁 Download File</a>
           <?php endif; ?>
+        <?php endif; ?>
 
-          <a class="discussion-link" href="discussion.php?training_id=<?= $training_id ?>&module_id=<?= $mat['id'] ?>">💬 View Discussion</a>
-        </div>
-    <?php endwhile; else: ?>
-      <p>No modules uploaded yet.</p>
-    <?php endif;
-    $materialStmt->close();
-    ?>
-  </div>
+        <!-- External link -->
+        <?php if (!empty($materialLink)): ?>
+          <p><a href="<?= htmlspecialchars($materialLink) ?>" target="_blank" class="button">🔗 Open External Link</a></p>
+        <?php endif; ?>
+
+        <!-- Discussion -->
+        <a class="discussion-link" href="discussion.php?training_id=<?= $training_id ?>&module_id=<?= $mat['id'] ?>">💬 View Discussion</a>
+      </div>
+  <?php endwhile; else: ?>
+    <p>No modules uploaded yet.</p>
+  <?php endif;
+  $materialStmt->close();
+  ?>
+</div>
+
+
 
   <a class="button" href="dashboard.php">⬅ Back to Dashboard</a>
 </div>

@@ -11,11 +11,11 @@ $trainer_id = $_SESSION['user_id'];
 $training_id = $_GET['training_id'] ?? null;
 $message = '';
 
-// Validate training ID and trainer assignment
 if (!$training_id) {
     die("❌ Training ID not provided.");
 }
 
+// Verify that the trainer is assigned to this training
 $check = $conn->prepare("
     SELECT t.id, t.title FROM trainings t
     JOIN trainer_assignments ta ON t.id = ta.training_id
@@ -30,40 +30,58 @@ if ($result->num_rows === 0) {
 }
 $training = $result->fetch_assoc();
 
-// Handle material upload
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $title = trim($_POST['title']);
     $description = trim($_POST['description']);
-    $uploadDir = '../uploads/materials';
+    $material_link = trim($_POST['material_link']);
+    $material_file_path = '';
 
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0777, true);
-    }
-
-    if (isset($_FILES['material_file']) && $_FILES['material_file']['error'] === UPLOAD_ERR_OK) {
+    // Handle file upload if provided
+    if (!empty($_FILES['material_file']['name']) && $_FILES['material_file']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = '../uploads/materials';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
         $ext = pathinfo($_FILES['material_file']['name'], PATHINFO_EXTENSION);
         $filename = uniqid('material_', true) . '.' . $ext;
-        $uploadPath = $uploadDir . '/' . $filename;
+        $targetPath = $uploadDir . '/' . $filename;
 
-        if (move_uploaded_file($_FILES['material_file']['tmp_name'], $uploadPath)) {
-            $insert = $conn->prepare("
-                INSERT INTO classroom_materials (training_id, title, description, file_path, uploaded_by)
-                VALUES (?, ?, ?, ?, ?)
-            ");
-            $insert->bind_param("isssi", $training_id, $title, $description, $uploadPath, $trainer_id);
-            if ($insert->execute()) {
-                $message = "✅ Material uploaded successfully!";
-            } else {
-                $message = "❌ Failed to insert into database.";
-            }
+        if (move_uploaded_file($_FILES['material_file']['tmp_name'], $targetPath)) {
+            $material_file_path = 'uploads/materials/' . $filename;
         } else {
             $message = "❌ Failed to upload file.";
         }
+    }
+
+    // Insert into database
+    if ($material_file_path || $material_link) {
+        $stmt = $conn->prepare("
+            INSERT INTO classroom_materials (training_id, module_title, module_description, material_file, material_link, uploaded_by)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+        $stmt->bind_param(
+            "issssi",
+            $training_id,
+            $title,
+            $description,
+            $material_file_path,
+            $material_link,
+            $trainer_id
+        );
+
+        if ($stmt->execute()) {
+            $message = "✅ Material uploaded successfully!";
+        } else {
+            $message = "❌ Database error: " . $stmt->error;
+        }
+        $stmt->close();
     } else {
-        $message = "❌ No file selected or upload error.";
+        $message = "❌ You must upload a file or provide a material link.";
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -93,18 +111,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <h2>➕ Add Material for: <?= htmlspecialchars($training['title']) ?></h2>
   <?php if (!empty($message)) echo "<p class='msg'>$message</p>"; ?>
 
-  <form method="POST" enctype="multipart/form-data">
-    <label>Material Title</label>
-    <input type="text" name="title" required>
+ <form method="POST" enctype="multipart/form-data">
+  <label>Material Title</label>
+  <input type="text" name="title" required>
 
-    <label>Description</label>
-    <textarea name="description" required></textarea>
+  <label>Description</label>
+  <textarea name="description" required></textarea>
 
-    <label>Upload File (PDF or Video)</label>
-    <input type="file" name="material_file" accept=".pdf,video/*" required>
+  <label>Upload File (PDF or Video)</label>
+  <input type="file" name="material_file" accept=".pdf,video/*">
 
-    <button type="submit">Upload Material</button>
-  </form>
+  <label>OR Provide External Link</label>
+  <input type="url" name="material_link" placeholder="https://example.com/material" />
+
+  <button type="submit">Upload Material</button>
+</form>
+
 
   <a href="../dashboard.php" class="back">⬅ Back to Dashboard</a>
 </div>

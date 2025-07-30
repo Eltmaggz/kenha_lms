@@ -68,7 +68,7 @@ $result = $conn->query($query);
   <style>
     table { width: 100%; border-collapse: collapse; }
     th, td { padding: 12px; border-bottom: 1px solid #ccc; text-align: left; }
-    th { background: #f4f4f4; }
+    th { background: #1b1a1aff; }
     .approve-btn {
       background: #00793a;
       color: white;
