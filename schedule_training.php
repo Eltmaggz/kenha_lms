@@ -6,7 +6,7 @@ if (!isset($_SESSION['email']) || $_SESSION['role'] !== 'DEPT-HEAD') {
 }
 include 'config.php';
 
-// Session Data
+// Session data
 $fullname = $_SESSION['fullname'];
 $role = $_SESSION['role'];
 $email = $_SESSION['email'];
@@ -21,7 +21,7 @@ $profilePhoto = (!empty($_SESSION['profile_photo']) && file_exists('uploads/' . 
 $message = "";
 $isError = false;
 
-// Handle form submission
+// Handle submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $title = trim($_POST['title']);
   $description = trim($_POST['description']);
@@ -29,8 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $mode = $_POST['mode_of_delivery'];
   $assessment = $_POST['assessment_type'];
   $suggested_trainer = trim($_POST['suggested_trainer']);
+  $justification = trim($_POST['justification']);
 
-  // Get department_id
+  // Get department and region IDs
   $depQuery = $conn->prepare("SELECT id FROM departments WHERE name = ?");
   $depQuery->bind_param("s", $department);
   $depQuery->execute();
@@ -38,7 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $depQuery->fetch();
   $depQuery->close();
 
-  // Get region_id
   $regQuery = $conn->prepare("SELECT id FROM regions WHERE name = ?");
   $regQuery->bind_param("s", $region);
   $regQuery->execute();
@@ -47,14 +47,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $regQuery->close();
 
   // Insert request
-  $stmt = $conn->prepare("
-    INSERT INTO training_requests (
+  $stmt = $conn->prepare("INSERT INTO training_requests (
       title, description, preferred_date, mode_of_delivery, assessment_type,
-      department_id, region_id, requested_by, suggested_trainer
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ");
+      department_id, region_id, requested_by, suggested_trainer, justification
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   $stmt->bind_param(
-    "ssssssiis",
+    "ssssssiiss",
     $title,
     $description,
     $preferred_date,
@@ -63,11 +61,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $department_id,
     $region_id,
     $userId,
-    $suggested_trainer
+    $suggested_trainer,
+    $justification
   );
 
   if ($stmt->execute()) {
-    $message = "✅ Training request sent to HR for approval.";
+    $message = "✅ Training request sent successfully.";
   } else {
     $message = "❌ Failed to submit request: " . $stmt->error;
     $isError = true;
@@ -76,6 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   $stmt->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,6 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </head>
 <body>
 
+<!-- Sidebar -->
 <div class="sidebar">
   <img src="<?= $profilePhoto ?>" alt="Profile Photo">
   <h3><?= htmlspecialchars($fullname) ?></h3>
@@ -117,6 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
   <a href="logout.php" class="logout">🚪 Logout</a>
 </div>
 
+<!-- Main Content -->
 <div class="main-content">
   <h2>📬 Create Training Request</h2>
 
@@ -156,6 +158,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <label>Suggested Trainer (Optional)</label>
     <input type="text" name="suggested_trainer" placeholder="Trainer full name or email">
+
+    <label>Justification / Reason for Request</label>
+    <textarea name="justification" placeholder="Explain why this training is needed" required></textarea>
 
     <button type="submit">📤 Submit Request</button>
   </form>
