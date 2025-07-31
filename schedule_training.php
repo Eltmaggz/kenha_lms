@@ -164,6 +164,54 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <button type="submit">📤 Submit Request</button>
   </form>
+  <!-- Add this below the request form or as a separate section -->
+<div class="content">
+  <h3>📋 My Submitted Requests & HR Feedback</h3>
+  <?php
+  $stmt = $conn->prepare("
+    SELECT tr.*, d.name AS dept_name, r.name AS region_name
+    FROM training_requests tr
+    JOIN departments d ON tr.department_id = d.id
+    JOIN regions r ON tr.region_id = r.id
+    WHERE tr.requested_by = ?
+    ORDER BY tr.created_at DESC
+  ");
+  $stmt->bind_param("i", $userId);
+  $stmt->execute();
+  $results = $stmt->get_result();
+
+  if ($results->num_rows > 0): ?>
+    <table style="width:100%; border-collapse:collapse; margin-top: 20px;">
+      <thead>
+        <tr style="background: #003366; color: white;">
+          <th>Title</th>
+          <th>Status</th>
+          <th>Preferred Date</th>
+          <th>Decision Date</th>
+          <th>HR Feedback</th>
+          <th>Deferred Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      <?php while ($row = $results->fetch_assoc()): ?>
+        <tr>
+          <td><?= htmlspecialchars($row['title']) ?></td>
+          <td><?= ucfirst($row['status']) ?></td>
+          <td><?= htmlspecialchars($row['preferred_date']) ?></td>
+          <td><?= $row['decision_date'] ? date('M d, Y', strtotime($row['decision_date'])) : '-' ?></td>
+          <td><?= htmlspecialchars($row['hr_response'] ?: 'Pending...') ?></td>
+          <td><?= $row['deferred_date'] ? date('M d, Y', strtotime($row['deferred_date'])) : '-' ?></td>
+        </tr>
+      <?php endwhile; ?>
+      </tbody>
+    </table>
+  <?php else: ?>
+    <p>You have not submitted any training requests yet.</p>
+  <?php endif;
+  $stmt->close();
+  ?>
+</div>
+
 </div>
 </body>
 </html>
